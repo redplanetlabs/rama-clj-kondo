@@ -1,0 +1,90 @@
+{:hooks
+ {:analyze-call
+  {com.rpl.rama/test clojure.core/identity
+   com.rpl.rama/defbasicblocksegmacro
+   com.rpl.rama-hooks/defbasicblocksegmacro-hook
+   com.rpl.rama/defbasicsegmacro      com.rpl.rama-hooks/defsegmacro-hook
+   com.rpl.rama/deframaop             com.rpl.rama-hooks/deframaop-hook
+   com.rpl.rama/deframafn             com.rpl.rama-hooks/deframaop-hook
+   com.rpl.rama/defoperation          com.rpl.rama-hooks/defoperation-hook
+   com.rpl.rama/?<-                   com.rpl.rama-hooks/top-level-block-hook
+   com.rpl.rama/batch<-               com.rpl.rama-hooks/batch<--hook
+   com.rpl.rama/defmodule             com.rpl.rama-hooks/defmodule-hook
+   com.rpl.rama/module                com.rpl.rama-hooks/module-hook
+
+   defbasicblocksegmacro com.rpl.rama-hooks/defbasicblocksegmacro-hook
+   defbasicsegmacro      com.rpl.rama-hooks/defsegmacro-hook
+   deframaop             com.rpl.rama-hooks/deframaop-hook
+   deframafn             com.rpl.rama-hooks/deframaop-hook
+   defoperation          com.rpl.rama-hooks/defoperation-hook
+   defmodule             com.rpl.rama-hooks/defmodule-hook
+   module                com.rpl.rama-hooks/module-hook
+   ?<-                   com.rpl.rama-hooks/top-level-block-hook
+   batch<-               com.rpl.rama-hooks/batch<--hook}}
+
+ :lint-as
+ {com.rpl.rama/defgenerator        clojure.core/defn
+  com.rpl.rama/defsegmacro         clojure.core/defn
+  com.rpl.rama/defblock            clojure.core/defn
+  com.rpl.rama/defdepotpartitioner clojure.core/defn
+  com.rpl.rama/generator           clojure.core/fn
+  com.rpl.rama/segmacro            clojure.core/fn}
+
+ :linters
+ {:rama-syntax-error {:level :error}
+  :unused-namespace  {:exclude [com.rpl.rama com.rpl.rama.path]}
+  :refer-all         {:exclude [com.rpl.rama com.rpl.rama.path]}
+  ;; clj-kondo doesn't support (:require [... :refer :all]) or (:use ...) forms
+  ;; Because of that, we need to tell clj-kondo to ignore unresolved symbol
+  ;; errors for any forms that belong to the namespaces above, that we tell
+  ;; clj-kondo we want to allow `:use` or `:refer :all` with.
+  :unresolved-symbol
+  {:exclude [;; com.rpl.rama
+             recur> defbasicsegmacro defbasicblocksegmacro seg# defoperation
+             gen-anyvar gen-anyvars gen-fragvar gen-pstatevar gen-anchorvar
+             anyvar? pstatevar? fragvar? anchorvar? if> ?<- defblock <<atomic
+             <<do throw! anchor> <<branch case> default> <<cond else> <<if and>
+             or> <<shadowif ifexpr continue> <<switch assert! path> NONE>
+             filter> local-select> local-transform> local-clear> value-schema
+             map-schema set-schema vector-schema fixed-keys-schema
+             |shuffle |hash |hash$$ |global |global$$ |all |all$$ |direct
+             |direct$$ select> |path$$ source> <<batch batch<- generator
+             defgenerator |origin gen> hash-by offset-ago
+             offset-after-timestamp-millis combiner accumulator +compound
+             +group-by materialize> <<subsource |custom |custom$$
+             yield-if-overtime async-loop<- loop<- anon-ramavar? ramavar?
+             unify> hook> block> ramafn> deframaop deframafn <<ramaop <<ramafn
+             module defmodule get-module-name declare-depot defdepotpartitioner
+             declare-tick-depot declare-object mirror-depot mirror-pstate
+             mirror-query stream-topology microbatch-topology declare-pstate
+             invoke-query depot-partition-append! <<sources java-block<-
+             java-macro! <<query-topology close! foreign-pstate foreign-depot
+             foreign-query foreign-append! foreign-append-async!
+             compiled-foreign-select-async foreign-select-async
+             compiled-foreign-select foreign-select
+             compiled-foreign-select-one-async foreign-select-one-async
+             compiled-foreign-select-one foreign-select-one
+             compiled-foreign-proxy-async foreign-proxy-async
+             compiled-foreign-proxy foreign-proxy foreign-invoke-query
+             foreign-invoke-query-async open-cluster-manager
+             open-cluster-manager-internal get-module-status
+             completable-future>
+
+             ;; com.rpl.rama.path
+             AFTER-ELEM ALL ATOM BEFORE-ELEM before-index BEGINNING collect
+             collect-one collected? comp-navs comp-paths cond-path
+             continue-then-stay continuous-subseqs declarepath defcollector
+             defdynamicnav defnav defprotocolpath DISPENSE dynamic-param?
+             eachnav END extend-protocolpath filterer FIRST if-path index-nav
+             INDEXED-VALS indexed-vals keypath LAST late-bound late-path
+             late-resolved-fn local-declarepath map-key MAP-KEYS MAP-VALS
+             multi-path multi-transform multi-transformed must NAME NAMESPACE
+             NIL->LIST NIL->SET nil->val NIL->VECTOR NONE NONE->val NONE-ELEM
+             NONE? not-selected? nthpath parser path pred pred< pred<= pred=
+             pred> pred>= providepath putval recursive-path select select-any
+             select-first select-one select-one! selected-any? selected?
+             set-elem setval sorted-map-range sorted-map-range-from
+             sorted-map-range-to sorted-set-range sorted-set-range-from
+             sorted-set-range-to srange srange-dynamic submap subselect subset
+             STAY STOP term termval transform transformed traverse traverse-all
+             VAL view with-fresh-collected]}}}
