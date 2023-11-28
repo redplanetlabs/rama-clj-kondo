@@ -5,11 +5,7 @@ effectively as possible.
 
 ## Setting up 
 
-The clj-kondo extensions for Rama come bundled with the Rama jar when 
-installing dependencies. This means your editor should import the clj-kondo 
-rules for you automatically, but in case it doesn't or you favour using 
-clj-kondo from a terminal, you can get clj-kondo to import the linting rules 
-for Rama by running 
+You can get clj-kondo to import the linting rules for Rama by running:
 
 ``` sh
 clj-kondo --lint "$(clojure -Spath)" --copy-configs --skip-lint
