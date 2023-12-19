@@ -5,28 +5,25 @@ effectively as possible.
 
 ## Setting up 
 
-The clj-kondo extensions for Rama are not currently bundled in the latest 
-release of Rama. To get these working in your project, you'll first need 
-to clone this repository:
+The clj-kondo extensions for Rama are not currently bundled in the latest
+release of Rama. To get these working in your project, you'll first need
+to clone this repository
 
 ```
 git clone https://github.com/redplanetlabs/rama-clj-kondo.git
 ```
 
-Then, you can either copy the contents of the `clj-kondo.exports` directory 
-into your `.clj-kondo`, so that you have 
+### Copying configs directory
 
-```
-<project-root>
-├── .clj-kondo
-│   ├── com.rpl
-│   │   └── rama
-│   │       ├── ...
-```
+With the repositoy cloned, you can simply copy the contents of the
+`rama-clj-kondo/clj-kondo.exports` directory into your
+`<project-root>/.clj-kondo`.
 
-Or, you can add the root of the `rama-clj-kondo` project to your classpath 
-in either your `deps.edn` or `project.clj` files, and run one of the following 
-commands, depending on where you added this to your classpath. 
+### Importing with clj-kondo
+
+If you prefer, you can also add the root of the `rama-clj-kondo` project to
+your classpath in either your `deps.edn` or `project.clj` files, and run one
+of the following commands, depending on where you added this to your classpath.
 
 ``` sh
 clj-kondo --lint "$(clojure -Spath)" --copy-configs --skip-lint
@@ -34,6 +31,15 @@ clj-kondo --lint "$(clojure -Spath)" --copy-configs --skip-lint
 
 ``` sh
 clj-kondo --lint "$(lein classpath)" --copy-configs --skip-lint
+```
+
+You can verify that clj-kondo will pick up the Rama hooks correctly if running 
+`tree` in your `<project-root>/.clj-kondo` directory looks like: 
+```
+ .clj-kondo
+ ├── com.rpl
+ │   └── rama
+ │       ├── ...
 ```
 
 <!--
