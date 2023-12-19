@@ -1,5 +1,3 @@
-# Rama clj-kondo 
-
 Since Rama defines it's own dataflow language as a DSL in Clojure, linting it 
 is a difficult problem. This repo defines the rules for how Rama code should be 
 re-written such that clj-kondo can provide helpful warnings and errors as 
@@ -9,7 +7,7 @@ effectively as possible.
 
 The clj-kondo extensions for Rama are not currently bundled in the latest 
 release of Rama. To get these working in your project, you'll first need 
-to clone this repository
+to clone this repository:
 
 ```
 git clone https://github.com/redplanetlabs/rama-clj-kondo.git
@@ -44,6 +42,8 @@ installing dependencies. This means your editor should import the clj-kondo
 rules for you automatically, but in case it doesn't or you favour using 
 clj-kondo from a terminal, you can get clj-kondo to import the linting rules 
 for Rama by running 
+
+You can get clj-kondo to import the linting rules for Rama by running:
 
 ``` sh
 clj-kondo --lint "$(clojure -Spath)" --copy-configs --skip-lint
