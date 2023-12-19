@@ -5,6 +5,50 @@ effectively as possible.
 
 ## Setting up 
 
+The clj-kondo extensions for Rama are not currently bundled in the latest
+release of Rama. To get these working in your project, you'll first need
+to clone this repository
+
+```
+git clone https://github.com/redplanetlabs/rama-clj-kondo.git
+```
+
+### Copying configs directory
+
+With the repositoy cloned, you can simply copy the contents of the
+`rama-clj-kondo/clj-kondo.exports` directory into your
+`<project-root>/.clj-kondo`.
+
+### Importing with clj-kondo
+
+If you prefer, you can also add the root of the `rama-clj-kondo` project to
+your classpath in either your `deps.edn` or `project.clj` files, and run one
+of the following commands, depending on where you added this to your classpath.
+
+``` sh
+clj-kondo --lint "$(clojure -Spath)" --copy-configs --skip-lint
+```
+
+``` sh
+clj-kondo --lint "$(lein classpath)" --copy-configs --skip-lint
+```
+
+You can verify that clj-kondo will pick up the Rama hooks correctly if running 
+`tree` in your `<project-root>/.clj-kondo` directory looks like: 
+```
+ .clj-kondo
+ ├── com.rpl
+ │   └── rama
+ │       ├── ...
+```
+
+<!--
+The clj-kondo extensions for Rama come bundled with the Rama jar when 
+installing dependencies. This means your editor should import the clj-kondo 
+rules for you automatically, but in case it doesn't or you favour using 
+clj-kondo from a terminal, you can get clj-kondo to import the linting rules 
+for Rama by running 
+
 You can get clj-kondo to import the linting rules for Rama by running:
 
 ``` sh
@@ -22,6 +66,7 @@ If you're using leiningen.
 Note that if your dependency on Rama is specified under a specific alias or 
 profile, you need to make sure to include that in the `clojure` or `lein` 
 command. Otherwise the Rama jar won't be on the classpath.
+-->
 
 ## Roadmap 
 
