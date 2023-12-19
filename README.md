@@ -7,6 +7,38 @@ effectively as possible.
 
 ## Setting up 
 
+The clj-kondo extensions for Rama are not currently bundled in the latest 
+release of Rama. To get these working in your project, you'll first need 
+to clone this repository
+
+```
+git clone https://github.com/redplanetlabs/rama-clj-kondo.git
+```
+
+Then, you can either copy the contents of the `clj-kondo.exports` directory 
+into your `.clj-kondo`, so that you have 
+
+```
+<project-root>
+├── .clj-kondo
+│   ├── com.rpl
+│   │   └── rama
+│   │       ├── ...
+```
+
+Or, you can add the root of the `rama-clj-kondo` project to your classpath 
+in either your `deps.edn` or `project.clj` files, and run one of the following 
+commands, depending on where you added this to your classpath. 
+
+``` sh
+clj-kondo --lint "$(clojure -Spath)" --copy-configs --skip-lint
+```
+
+``` sh
+clj-kondo --lint "$(lein classpath)" --copy-configs --skip-lint
+```
+
+<!--
 The clj-kondo extensions for Rama come bundled with the Rama jar when 
 installing dependencies. This means your editor should import the clj-kondo 
 rules for you automatically, but in case it doesn't or you favour using 
@@ -28,6 +60,7 @@ If you're using leiningen.
 Note that if your dependency on Rama is specified under a specific alias or 
 profile, you need to make sure to include that in the `clojure` or `lein` 
 command. Otherwise the Rama jar won't be on the classpath.
+-->
 
 ## Roadmap 
 
