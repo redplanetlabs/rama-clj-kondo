@@ -248,7 +248,7 @@
            (body->sexpr
             (transform-sexprs
              '(<<if true (one) (two) (three))))))
-    (is (= '(if true (one) (two) (three))
+    (is (= '(if true (do (one) (two)) (three))
            (body->sexpr
             (transform-sexprs
              '(<<if true (one) (two) (else>) (three)))))))

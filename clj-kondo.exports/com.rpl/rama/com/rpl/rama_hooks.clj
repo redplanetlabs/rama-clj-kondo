@@ -393,7 +393,7 @@
                 (second children)]
      :branches
      (if else-marker
-       [if-block else-block]
+       [[(wrap-<<do if-block)] [(wrap-<<do else-block)]]
        [if-block])}))
 
 ;; NOTE: the following forms, like the ones above, are handled specially. They
