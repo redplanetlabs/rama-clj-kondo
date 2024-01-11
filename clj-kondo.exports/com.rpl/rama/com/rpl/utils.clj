@@ -7,7 +7,7 @@
 ;;; For debugging...
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- prnm
+(defn prnm
   "Debug print, with metadata.
 
   Printing metadata can be very important for dealing with clj-kondo hooks
