@@ -3,11 +3,8 @@
    [clj-kondo.hooks-api :as api]
    [clj-kondo.impl.utils :as utils :refer [parse-string]]
    [clojure.test :refer [deftest is testing]]
-   [clojure.walk :as walk]
-   [clojure.pprint :refer [pprint]]
    [com.rpl.errors :as err]
-   [com.rpl.rama-hooks :as rama]
-   [com.rpl.utils :as u]))
+   [com.rpl.rama-hooks :as rama]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helpers
@@ -248,7 +245,7 @@
            (body->sexpr
             (transform-sexprs
              '(<<if true (one) (two) (three))))))
-    (is (= '(if true (one) (two) (three))
+    (is (= '(if true (do (one) (two)) (three))
            (body->sexpr
             (transform-sexprs
              '(<<if true (one) (two) (else>) (three)))))))

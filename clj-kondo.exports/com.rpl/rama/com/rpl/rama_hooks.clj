@@ -262,12 +262,6 @@
   [_f _children _ramavars]
   {:prefix nil :branches nil})
 
-(defn case-marker
-  [marker-condition]
-  (api/list-node
-   (api/token-node 'case>)
-   marker-condition))
-
 ;; (<<sources s
 ;;   (source> *depot :> [*k *v])
 ;;   (println *k *v)
@@ -313,7 +307,7 @@
            branches)}))
 
 (defmethod split-form '<<subsource
-  [f children ramavars]
+  [f children _ramavars]
   (let [metadata (meta f)
         [_<<subsource data & sources] children
         blocks   (partition-by #(and (api/list-node? %)
@@ -393,7 +387,7 @@
                 (second children)]
      :branches
      (if else-marker
-       [if-block else-block]
+       [[(wrap-<<do if-block)] [(wrap-<<do else-block)]]
        [if-block])}))
 
 ;; NOTE: the following forms, like the ones above, are handled specially. They
