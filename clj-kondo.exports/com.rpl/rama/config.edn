@@ -68,7 +68,7 @@
              compiled-foreign-proxy foreign-proxy foreign-invoke-query
              foreign-invoke-query-async open-cluster-manager
              open-cluster-manager-internal get-module-status
-             completable-future>
+             completable-future> ack-return>
 
              ;; com.rpl.rama.path
              AFTER-ELEM ALL ATOM BEFORE-ELEM before-index BEGINNING collect
