@@ -233,6 +233,16 @@
      ramavars]
   ))
 
+;; This is handling the special case in query topologies where the input
+;; ramavars might be empty, but there's still emit vars. Something such as:
+;;   (<<query-topology
+;;     topologies
+;;     "name"
+;;     [:> *ret]
+;;     (identity :x :> *ret))
+;; Without this special handling, and just calling `extract-emits` directly,
+;; it will mistakenly try using `:> *ret` as a binding form, which can cause
+;; confusing linting issues.
 (defn- extract-binding-emits
   "Separate the input vars from output vars in something like a query topology
   definition or loop<- bindings"
