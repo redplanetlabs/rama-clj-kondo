@@ -145,6 +145,17 @@
              '(identity 1 :> *one)
              '(pr *one))))))
 
+  (testing "Various collection types"
+    (is
+     (= '(let [*a (identity :a)]
+           (filter> (contains? #{:x :y :z}) [:a :b :c])
+           (identity (into {:a 1 :b 2} [[:c 3] [:d 4]])))
+        (body->sexpr
+         (transform-sexprs
+          '(identity :a :> *a)
+          '(filter> (contains? #{:x :y :z}) [:a :b :c])
+          '(identity (into {:a 1 :b 2} [[:c 3] [:d 4]])))))))
+
   (testing "Destructuring binds"
     (is
      (= '(let
