@@ -233,6 +233,25 @@
      ramavars]
   ))
 
+;; This is handling the special case in query topologies where the input
+;; ramavars might be empty, but there's still emit vars. Something such as:
+;;   (<<query-topology
+;;     topologies
+;;     "name"
+;;     [:> *ret]
+;;     (identity :x :> *ret))
+;; Without this special handling, and just calling `extract-emits` directly,
+;; it will mistakenly try using `:> *ret` as a binding form, which can cause
+;; confusing linting issues.
+(defn- extract-binding-emits
+  "Separate the input vars from output vars in something like a query topology
+  definition or loop<- bindings"
+  [terms curr-ramavars]
+  (if (and (api/keyword-node? (first terms))
+           (= :> (:k (first terms))))
+    [[] (rest terms)]
+    (extract-emits terms curr-ramavars)))
+
 ;; NOTE: the following implementations of `split-form` are for any form that
 ;; provides multiple branches. Ex. `<<if`, `<<cond`, `<<switch`, etc. These
 ;; then return multiple branches that will have their emit vars checked. This
@@ -555,7 +574,7 @@
   (let [metadata (meta node)
         [_ _topology name input-output & body] (:children node)
         [input new-bindings]
-        (extract-emits (:children input-output) #{})
+        (extract-binding-emits (:children input-output) #{})
         ret-node (with-meta (api/vector-node new-bindings)
                    metadata)
         new-node (with-meta

@@ -657,22 +657,42 @@
   (is
    (=
     '(fn
-      name
-      [*url *start-bucket *end-bucket]
-      (|hash *url)
-      (let
-       [[*granularity *gstart *gend]
-        (explode (query-granularities :m *start-bucket *end-bucket))]
+       name
+       []
        (let
-        [*bucket-stat
-         (local-select>
-          [(keypath *url *granularity)
-           (sorted-map-range *gstart *gend) MAP-VALS]
-          $$window-stats)]
-        (|origin)
-        (let
-         [*stats (+combine-measurements *bucket-stat)]
-         [*stats]))))
+           [*ret (identity :x)]
+           [*ret]))
+    (body->sexpr
+     (rama/transform-module-form
+      (->sexpr
+       '(<<query-topology
+         x
+         "name"
+         [:> *ret]
+         (identity :x :> *ret)))
+      nil
+      #{})))
+   "0 arity query topology")
+
+  (is
+   (=
+    '(fn
+       name
+       [*url *start-bucket *end-bucket]
+       (|hash *url)
+       (let
+           [[*granularity *gstart *gend]
+            (explode (query-granularities :m *start-bucket *end-bucket))]
+           (let
+               [*bucket-stat
+                (local-select>
+                 [(keypath *url *granularity)
+                  (sorted-map-range *gstart *gend) MAP-VALS]
+                 $$window-stats)]
+               (|origin)
+               (let
+                   [*stats (+combine-measurements *bucket-stat)]
+                   [*stats]))))
     (-> '(<<query-topology
           topologies
           "name"
