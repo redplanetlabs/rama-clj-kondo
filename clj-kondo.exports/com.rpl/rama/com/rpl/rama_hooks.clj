@@ -882,6 +882,7 @@
                      (cond
                        (api/vector-node? f) (api/vector-node body)
                        (api/map-node? f) (api/map-node body)
+                       (api/set-node? f) (api/set-node body)
                        :else (api/list-node body))
                      assoc
                      ::ramavars
