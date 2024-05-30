@@ -1833,7 +1833,6 @@
                             $$funds)))))))))))))
 
 (deftest bank-transfer-module-with-errors-test
-  (println "=============================================")
   (with-testing-context
       "Should error in multiple places"
       (is (= bank-transfer-module-with-error-code-transformed
