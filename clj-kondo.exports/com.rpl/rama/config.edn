@@ -11,6 +11,7 @@
    com.rpl.rama/batch<-               com.rpl.rama-hooks/batch<--hook
    com.rpl.rama/defmodule             com.rpl.rama-hooks/defmodule-hook
    com.rpl.rama/module                com.rpl.rama-hooks/module-hook
+   com.rpl.rama/foreign-select        com.rpl.rama-hooks/foreign-select-hook
 
    defbasicblocksegmacro com.rpl.rama-hooks/defbasicblocksegmacro-hook
    defbasicsegmacro      com.rpl.rama-hooks/defsegmacro-hook
@@ -20,7 +21,8 @@
    defmodule             com.rpl.rama-hooks/defmodule-hook
    module                com.rpl.rama-hooks/module-hook
    ?<-                   com.rpl.rama-hooks/top-level-block-hook
-   batch<-               com.rpl.rama-hooks/batch<--hook}}
+   batch<-               com.rpl.rama-hooks/batch<--hook
+   foreign-select        com.rpl.rama-hooks/foreign-select-hook}}
 
  :lint-as
  {com.rpl.rama/defgenerator        clojure.core/defn

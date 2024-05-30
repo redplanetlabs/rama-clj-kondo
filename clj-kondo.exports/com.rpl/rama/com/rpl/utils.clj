@@ -41,14 +41,21 @@
   if the token is a prefixed symbol, we make sure that the namespace is a rama
   namespace, and the set contains the simple symbol."
   [symbol-set token]
-  (when token
+  ;; NOTE: this needs to be an `if` returning `false` in the else case, not a
+  ;; `when`. `rama=` is used in `split-form`s, and there was a really weird bug
+  ;; where if the user was trying to call a keyword function (which is illegal
+  ;; in rama anyways), then it would break the partitioning of the blocks,
+  ;; causing a bunch of unresolved symbol errors. With `rama=` returning `false`
+  ;; instead of `nil`, that problem is resolved.
+  (if token
     (let [symbol (api/sexpr token)]
       (if (qualified-symbol? symbol)
         (let [{:keys [name ns]} (api/resolve {:name symbol})]
           (and
            (= ns 'com.rpl.rama)
            (contains? symbol-set name)))
-        (contains? symbol-set symbol)))))
+        (contains? symbol-set symbol)))
+    false))
 
 (defn rama=
   [a b]
