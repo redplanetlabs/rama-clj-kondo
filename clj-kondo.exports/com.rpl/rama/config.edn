@@ -41,7 +41,9 @@
   ;; errors for any forms that belong to the namespaces above, that we tell
   ;; clj-kondo we want to allow `:use` or `:refer :all` with.
   :unresolved-symbol
-  {:exclude [;; com.rpl.rama
+  {:exclude [;; Special compiler internal
+             clj!
+             ;; com.rpl.rama
              recur> defbasicsegmacro defbasicblocksegmacro seg# defoperation
              gen-anyvar gen-anyvars gen-fragvar gen-pstatevar gen-anchorvar
              anyvar? pstatevar? fragvar? anchorvar? if> ?<- defblock <<atomic

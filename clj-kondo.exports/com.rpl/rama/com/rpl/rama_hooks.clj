@@ -790,6 +790,10 @@
                           ramavars)))]
     [(with-meta new-node (meta node)) nil]))
 
+(defmethod handle-form 'clj!
+  [node following _ramavars]
+  [node following])
+
 (defn transform-form
   "Given a form, and all forms following it, transforms it such that Rama
   dataflow code's emits and other special forms will be rewritten as `let`s,

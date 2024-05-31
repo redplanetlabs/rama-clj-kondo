@@ -1137,6 +1137,35 @@
           (get-error-messages)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Clojure interop tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest clj!-test
+  (is (= '(clj! (let [m {:a 1 :b 2}]
+                  (prn (:a m))))
+         (body->sexpr
+          (transform-sexprs
+           '(clj! (let [m {:a 1 :b 2}]
+                    (prn (:a m))))))))
+
+  (is (= '(let [*a (identity 1)]
+            (let [*b (identity 2)]
+              (let [*c (+ 3 (clj!
+                             (let [m {:a *a :b *b}]
+                               (reduce (fn [a v] (+ a v)) (vals m)))))]
+                (prn *c))
+              ))
+         (body->sexpr
+          (transform-sexprs
+           '(identity 1 :> *a)
+           '(identity 2 :> *b)
+           '(+ 3 (clj! (let [m {:a *a :b *b}]
+                         (reduce (fn [a v] (+ a v)) (vals m))))
+               :> *c)
+           '(prn *c)
+          )))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Java interop tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
