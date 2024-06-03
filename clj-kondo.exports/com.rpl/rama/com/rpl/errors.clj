@@ -42,6 +42,19 @@
   "<<ramaop or <<ramafn name must begin with `%`")
 (def syntax-error-source>-first
   "<<sources block must begin with `(source> ...)`")
+(def syntax-error-keyword-fn-in-dataflow
+  "Keywords cannot be used as functions in dataflow code. Use `get`.")
+(defn syntax-error-illegal-special-form [form]
+  (format "Cannot use %s in dataflow code.
+
+Clojure special forms or macros expanding to them cannot be used in
+Rama's dataflow code. Use Rama's primitives instead."
+          form))
+(def syntax-error-lambda-fn-in-foreign-select
+  "Lambda functions cannot be used in foreign selects.
+The worker will be unable to deserialize the function.")
+(def syntax-error-java-interop-in-dataflow
+  "Java methods or constructors cannot be called from dataflow code.")
 
 (defn error!
   [message metadata]
@@ -125,3 +138,27 @@
                      (u/rama= 'source> (:value token)))
         (error! syntax-error-source>-first metadata)))
     (error! syntax-error-source>-first metadata)))
+
+(defn maybe-illegal-keyword-fn
+  [context metadata]
+  (when (= context :dataflow)
+    (error! syntax-error-keyword-fn-in-dataflow metadata)))
+
+(defn maybe-illegal-special-form
+  [context form metadata]
+  (when (= context :dataflow)
+    (error! (syntax-error-illegal-special-form form) metadata)))
+
+(defn maybe-illegal-lambda
+  [context metadata]
+  (println context)
+  (cond
+    (= context :dataflow)
+    (error! (syntax-error-illegal-special-form 'fn) metadata)
+    (= context :foreign-select)
+    (error! syntax-error-lambda-fn-in-foreign-select metadata)))
+
+(defn maybe-illegal-java-form
+  [context metadata]
+  (when (= context :dataflow)
+    (error! syntax-error-java-interop-in-dataflow metadata)))

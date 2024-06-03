@@ -180,6 +180,82 @@
   ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Validation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; NOTE: There are certain contexts in which some forms cannot be used.
+;; For example, throughout Rama's dataflow code, Clojure primitive forms
+;; or macros that expand to them cannot be used.
+;; We want to keep track of the current contexts that forms are being used
+;; in to make sure that illegal usage isn't allowed.
+
+(def illegal-forms
+  '#{declare def defonce defn defn- definline defmacro quote var
+     memfn let letfn set!
+     and or
+     when when-not when-let when-first when-some
+     if if-not if-let if-some
+     cond condp case
+     loop recur doseq dotimes for while
+     binding locking time with-in-str with-out-str with-precision
+     with-local-vars with-open with-redefs with-redefs-fn
+     do try catch finally throw
+     as-> cond-> cond->> some-> some->> .. doto
+     defprotocol extend-type extend-protocol
+     defrecord deftype defmethod defmulti
+     definterface proxy
+     ns import
+     vswap! monitor-enter monitor-exit})
+
+(defn java-method?
+  [form]
+  (let [form-str (str form)]
+    ;; NOTE: clojure reserves symbols starting or ending with `.`, so we know
+    ;; that this will have to be a Java method or constructor call.
+    (or (str/starts-with? form-str ".")
+        (str/ends-with? form-str "."))))
+
+(defn keyword-fn?
+  [form]
+  (let [form-str (str form)]
+    (and (str/starts-with? form-str ":")
+         ;; If it ends with ">" then it's an emit token
+         ;; ex. :> or :err>
+         (not (str/ends-with? form-str ">")))))
+
+(def ^:dynamic *context* nil)
+
+(defmulti ^:private validate-form
+  (fn [form]
+    (let [value (or (:value form) (:k form) form)]
+      (cond
+        (keyword-fn? value) :keyword-fn-form
+        (= 'fn value) :lambda-fn-form
+        (contains? illegal-forms value) :special-form
+        (java-method? value) :java-form
+        :else form))))
+
+(defmethod validate-form :default
+  [_form]
+  true)
+
+(defmethod validate-form :keyword-fn-form
+  [form]
+  (err/maybe-illegal-keyword-fn *context* (meta form)))
+
+(defmethod validate-form :lambda-fn-form
+  [form]
+  (err/maybe-illegal-lambda *context* (meta form)))
+
+(defmethod validate-form :special-form
+  [form]
+  (err/maybe-illegal-special-form *context* (:value form) (meta form)))
+
+(defmethod validate-form :java-form
+  [form]
+  (err/maybe-illegal-java-form *context* (meta form)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Transformers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -470,6 +546,12 @@
         use-ramavars (api/list-node (list
                                      (api/token-node 'pr)
                                      new-bindings))
+        ;; NOTE: We're inserting a trampoline here because when we transform
+        ;; the body, we don't want the method call symbol to be the first
+        ;; argument. This will cause a linting error since it appears as if the
+        ;; java interop is happening from inside dataflow code (which it is, but
+        ;; normally that's disallowed, so we want to allow it here)
+        linted-expr  (api/list-node (list* 'trampoline (:children expr)))
         new-node     (api/list-node
                       (list*
                        (api/token-node 'let)
@@ -480,7 +562,7 @@
                          new-bindings
                          (api/vector-node [])])
                        (transform-body
-                        (concat [use-ramavars] [expr] following)
+                        (concat [use-ramavars] [linted-expr] following)
                         ramavars)))
         metadata     (meta node)
        ]
@@ -727,6 +809,10 @@
                           ramavars)))]
     [(with-meta new-node (meta node)) nil]))
 
+(defmethod handle-form 'clj!
+  [node following _ramavars]
+  [node following])
+
 (defn transform-form
   "Given a form, and all forms following it, transforms it such that Rama
   dataflow code's emits and other special forms will be rewritten as `let`s,
@@ -749,6 +835,9 @@
   "
   ([f following] (transform-form f following #{}))
   ([f following ramavars]
+   (when (api/list-node? f)
+     (let [out (validate-form (first (:children f)))]
+       out))
    (if-let [children (and (not (api/token-node? f))
                           (not (api/keyword-node? f))
                           (:children f))]
@@ -992,10 +1081,12 @@
       ;; Anything inside `<<sources` or `<<query-topology` is data-flow code
       ;; for topologies, so that should be parse/re-written as Rama code
       (rama= '<<sources (:value (first children)))
-      (let [[out _following] (transform-form form [] pobjects)]
+      (let [[out _following] (binding [*context* :dataflow]
+                               (transform-form form [] pobjects))]
         [out following])
       (rama= '<<query-topology (:value (first children)))
-      (let [[out _following] (handle-form form [] pobjects)]
+      (let [[out _following] (binding [*context* :dataflow]
+                               (handle-form form [] pobjects))]
         [out following])
 
       :else
@@ -1094,7 +1185,8 @@
                   (list* (api/token-node 'defn)
                          name
                          input
-                         (transform-body children)))]
+                         (binding [*context* :dataflow]
+                           (transform-body children))))]
     (err/maybe-missing-def-name name m)
     (err/maybe-missing-input-vector input m)
 
@@ -1129,7 +1221,8 @@
                      (api/list-node
                       (list*
                        (api/token-node 'do)
-                       (transform-body body)))
+                       (binding [*context* :dataflow]
+                         (transform-body body))))
                      (meta node))]
     {:node (with-meta new-node (meta node))}))
 
@@ -1139,7 +1232,8 @@
   Turns the form into a Clojure `fn`"
   [{:keys [node]}]
   (let [metadata   (meta node)
-        [new-node] (transform-body [node])]
+        [new-node] (binding [*context* :dataflow]
+                     (transform-body [node]))]
     {:node (with-meta new-node metadata)}))
 
 (defn module-hook
@@ -1185,3 +1279,12 @@
     (err/maybe-missing-def-name name m)
     (err/maybe-missing-input-vector input m)
     {:node (with-meta new-node m)}))
+
+(defn foreign-select-hook
+  "Validates that lambda functions aren't used in foreign-select calls"
+  [{:keys [node] :as orig}]
+  (binding [*context* :foreign-select]
+    (->> (api/sexpr node)
+         (flatten)
+         (mapv validate-form)))
+  orig)
