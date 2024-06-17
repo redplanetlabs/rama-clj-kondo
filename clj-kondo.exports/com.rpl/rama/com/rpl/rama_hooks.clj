@@ -813,7 +813,7 @@
   [node following _ramavars]
   [node following])
 
-(defn transform-form
+(defn transform-form*
   "Given a form, and all forms following it, transforms it such that Rama
   dataflow code's emits and other special forms will be rewritten as `let`s,
   with the following forms nested inside the body of the `let`.
@@ -833,7 +833,7 @@
         (println *z)
         ...)))
   "
-  ([f following] (transform-form f following #{}))
+  ([f following] (transform-form* f following #{}))
   ([f following ramavars]
    (when (api/list-node? f)
      (let [out (validate-form (first (:children f)))]
@@ -915,6 +915,7 @@
              (or new-bindings rebinds)
              [(let [ramavars     (into ramavars new-vars)
                     follows      (transform-body following ramavars)
+                    ramavars     (into ramavars (::ramavars (meta follows)))
                     ;; HACK: This insertion of a call to `trampoline` is
                     ;; actually important. For whatever reason, clojure-lsp
                     ;; doesn't provide the regular editor support for things
@@ -997,6 +998,12 @@
                      (::ramavars (meta body))))
                   following]))))))
      [f following])))
+
+(defn transform-form
+  ([f following] (transform-form* f following #{}))
+  ([f following ramavars]
+   (let [[node _following :as out] (transform-form* f following ramavars)]
+     out)))
 
 (defn transform-body
   "Transform a sequence of rewrite nodes representing Rama forms.

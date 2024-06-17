@@ -167,6 +167,23 @@
           '(hash-map :one 1 :two 2 :> {:keys [*one *two]})
           '(pr *one))))))
 
+  (testing "Multiple assignments"
+    (is
+     (=
+      '(let
+        [*one (identity 1)]
+        (let
+         [*two (identity 2)]
+         (let
+          [*three (identity 3)]
+          (pr [*one *two *three]))))
+      (body->sexpr
+       (transform-sexprs
+        '(identity 1 :> *one)
+        '(identity 2 :> *two)
+        '(identity 3 :> *three)
+        '(pr [*one *two *three]))))))
+
   (testing "Identity reassignment"
     (is
      (=
@@ -306,6 +323,36 @@
          (transform-sexprs
           '(<<if true (identity 1 :> *x) (else>) (identity 2 :> *x))
           '(+ *x 1 :> *y)))))
+
+    (is
+     (= '(let
+          [*b nil
+           _
+           (if
+            true
+             (do
+               (let [*a (identity 1)]
+                 (let [*b (identity 2)]
+                   {*b *b})))
+             (do
+               (let [*b (identity 3)]
+                 (let [*c (identity 4)]
+                   {*b *b}))))]
+          (let [*d (+ *b 1)]
+            (let [*e (+ *d 1)]
+              (pr *e))))
+        (body->sexpr
+         (transform-sexprs
+          '(<<if
+            true
+            (identity 1 :> *a)
+            (identity 2 :> *b)
+            (else>)
+            (identity 3 :> *b)
+            (identity 4 :> *c))
+          '(+ *b 1 :> *d)
+          '(+ *d 1 :> *e)
+          '(pr *e)))))
 
     (is
      (= '(let
@@ -619,18 +666,18 @@
     '(case
       (type *data)
      (case> A)
-      (do (let [{:keys [*a]} (case> A)] (println *a)))
+      (do (let [{:keys [*a]} (case> A)] (prn *a)))
      (case> B)
-      (do (let [{:keys [*b]} (case> B)] (println *b))))
+      (do (let [{:keys [*b]} (case> B)] (prn *b))))
     (body->sexpr
      (transform-sexprs
       '(<<subsource
         *data
        (case> A :> {:keys [*a]})
-        (println *a)
+        (prn *a)
 
        (case> B :> {:keys [*b]})
-        (println *b)
+        (prn *b)
        )))))
 
   (is
@@ -641,20 +688,20 @@
        (case
         (type *data)
        (case> A)
-        (do (let [{:keys [*a]} (case> A)] (println *a {*a *a})))
+        (do (let [{:keys [*a]} (case> A)] (prn *a {*a *a})))
        (case> B)
-        (do (let [{:keys [*a]} (case> B)] (println *a {*a *a}))))]
-      (println *a))
+        (do (let [{:keys [*a]} (case> B)] (prn *a {*a *a}))))]
+      (prn *a))
     (body->sexpr
      (transform-sexprs
       '(<<subsource
         *data
        (case> A :> {:keys [*a]})
-        (println *a)
+        (prn *a)
 
        (case> B :> {:keys [*a]})
-        (println *a))
-      '(println *a))))))
+        (prn *a))
+      '(prn *a))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Special form tests
@@ -945,11 +992,11 @@
    (= '(do
         (let
          [*x (identity 1)]
-         (println *x)))
+         (prn *x)))
       (body->sexpr
        (transform-sexprs
         '(<<do (identity 1 :> *x))
-        '(println *x))))))
+        '(prn *x))))))
 
 (deftest +group-by
   (is
@@ -1823,7 +1870,7 @@
 
           (body->sexpr
            (transform-sexprs
-            '(when true? (println "true"))))
+            '(when true? (prn "true"))))
 
           (is (= (err/syntax-error-illegal-special-form 'when)
                  (-> utils/*ctx*
