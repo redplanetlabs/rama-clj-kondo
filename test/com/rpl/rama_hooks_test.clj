@@ -374,6 +374,56 @@
             (identity 2 :> *x))
           '(+ *x 1 :> *y))))))
 
+  (testing "Nested conditional unification"
+    (is
+     (=
+      '(let
+        [*b nil
+         _ (if true
+             (do
+               (prn "if")
+               (let
+                [*a (identity 1)]
+                (prn *a)
+                (let
+                 [*b (identity 2)]
+                 {*b *b})))
+             (do
+               (prn "else")
+               (let
+                [*b nil
+                 _ (cond
+                     (case> *x)
+                     (let [*b (identity 3)] {*b *b})
+                     (case> *y)
+                     (let [*b (identity 4)] {*b *b})
+                     (default>)
+                     (let [*b (identity 5)] {*b *b}))]
+                (prn *b)
+                (let
+                 [*c (identity 6)]
+                 {*b *b}))))]
+        (prn *b))
+      (body->sexpr
+       (transform-sexprs
+        '(<<if true
+           (prn "if")
+           (identity 1 :> *a)
+           (prn *a)
+           (identity 2 :> *b)
+          (else>)
+           (prn "else")
+           (<<cond
+            (case> *x)
+             (identity 3 :> *b)
+            (case> *y)
+             (identity 4 :> *b)
+            (default>)
+             (identity 5 :> *b))
+           (prn *b)
+           (identity 6 :> *c))
+        '(prn *b))))))
+
   (with-testing-context
    "Can't have multiple else>s"
    (is (= '(if true (one) (two))
