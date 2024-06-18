@@ -151,7 +151,6 @@ The worker will be unable to deserialize the function.")
 
 (defn maybe-illegal-lambda
   [context metadata]
-  (println context)
   (cond
     (= context :dataflow)
     (error! (syntax-error-illegal-special-form 'fn) metadata)
