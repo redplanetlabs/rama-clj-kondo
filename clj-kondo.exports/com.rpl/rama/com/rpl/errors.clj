@@ -21,7 +21,7 @@
 (def syntax-error-else>-arity
   "(else>) takes no arguments")
 (def syntax-error-source>-arity
-  "(source> ...) takes exactly 1 argument")
+  "(source> ...) takes one or two arguments")
 (def syntax-error-subsource-case>-arity
   "(case> ...) takes exactly 1 argument, plus an optional emit")
 (def syntax-error-multiple-elses
@@ -90,7 +90,7 @@ The worker will be unable to deserialize the function.")
 
 (defn maybe-source-arity
   [source-expr metadata]
-  (when (not= 2 (count source-expr))
+  (when-not (contains? #{2 3} (count source-expr))
     (error! syntax-error-source>-arity metadata)))
 
 (defn maybe-subsource-case-arity

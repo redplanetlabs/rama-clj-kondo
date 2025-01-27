@@ -626,7 +626,7 @@
       '(fn
         [*depot *depot-2]
         (let
-         [[*k *v] (source> *depot)]
+         [[*k *v] (source> *depot {:retry-mode :individual})]
          (pr [*k *v])
          (+compound $$p {*k (+vec-agg *v)}))
         (let
@@ -637,7 +637,7 @@
        (transform-sexprs
         '(<<sources
           s
-         (source> *depot :> [*k *v])
+         (source> *depot {:retry-mode :individual} :> [*k *v])
           (pr [*k *v])
           (+compound $$p {*k (+vec-agg *v)})
          (source> *depot-2 :> *k)
@@ -698,7 +698,7 @@
    (transform-sexprs
     '(<<sources
       s
-     (source> *depot-1 *depot-2 :> *k)
+     (source> *depot-1 *depot-2 *depot-3 :> *k)
       (+compound $$p {*k (+count)})))
 
    (is (= err/syntax-error-source>-arity
