@@ -302,55 +302,52 @@
 ;; (let [*hello (identity "Hello World")] ...)
 (defn- extract-emits
   "Separate the expression, output variables, new bindings, and rebinds from a segment."
-  [terms curr-ramavars]
-  (loop [remaining-terms terms
-         op nil
-         inputs []
-         all-output-var-nodes [] ; Collect variable *nodes* here
-         state :op] ; states: :op, :inputs, :output-stream, :output-body
-    (let [term (first remaining-terms)
-          next-terms (rest remaining-terms)]
+  [all-terms curr-ramavars]
+  (loop [terms all-terms
+         expr-nodes []
+         all-output-var-nodes []
+         state :inputs]
+    (let [current-term (first terms)
+          remaining    (rest terms)]
       (cond
         ;; End of terms, process collected data
-        (empty? remaining-terms)
+        (empty? terms)
         (let [;; Calculate final vars based on collected output-vars
               ramavars (find-all-ramavars all-output-var-nodes) ; Get symbols
               new-vars (set/difference ramavars curr-ramavars)
               rebinds  (set/intersection ramavars curr-ramavars)]
-          [(cons op inputs) ; Expression part (list of nodes)
+          [expr-nodes ; Expression part (list of nodes, op is the first one)
            all-output-var-nodes ; List of all output variable *nodes*
            (when (seq new-vars) (into [] new-vars)) ; List of new variable *symbols*
            (when (seq rebinds) (into [] rebinds)) ; List of rebound variable *symbols*
            ramavars]) ; Set of all output variable *symbols*
-        
-        ;; Initial state: capture the operation
-        (= state :op)
-        (recur next-terms term inputs all-output-var-nodes :inputs)
-        
+
         ;; If we find an emit keyword while expecting inputs, switch state
-        (and (= state :inputs) (emit-node? term))
-        (recur next-terms op inputs all-output-var-nodes :output-body)
-        
-        ;; State: capture input arguments
+        (and (= state :inputs) (emit-node? current-term))
+        (recur remaining expr-nodes all-output-var-nodes :output-body)
+
+        ;; State: capture input arguments (including the initial operation)
         (= state :inputs)
-        (recur next-terms op (conj inputs term) all-output-var-nodes :inputs)
-        
+        (recur remaining (conj expr-nodes current-term) all-output-var-nodes :inputs)
+
         ;; If we find another emit keyword while processing an output body,
-        ;; just stay in output-body state for the next term.
-        (and (= state :output-body) (emit-node? term))
-        (recur next-terms op inputs all-output-var-nodes :output-body)
-        
+        ;; just skip it and stay in output-body state for the next term.
+        (and (= state :output-body) (emit-node? current-term))
+        (recur remaining expr-nodes all-output-var-nodes :output-body)
+
         ;; State: process the body of an output stream declaration
         (= state :output-body)
-        (if (is-anchor-node? term)
+        (if (is-anchor-node? current-term)
           ;; It's an anchor, skip it and continue processing the output body
-          (recur next-terms op inputs all-output-var-nodes :output-body)
+          (recur remaining expr-nodes all-output-var-nodes :output-body)
           ;; It's not an anchor, assume it's a variable node
-          (recur next-terms op inputs (conj all-output-var-nodes term) :output-body))
-        
+          (recur remaining expr-nodes (conj all-output-var-nodes current-term) :output-body))
+
         ;; Fallback/Error case (shouldn't ideally happen with correct input)
         :else
-        (throw (ex-info "Unexpected state in extract-emits" {:state state :term term}))))))
+        (throw (ex-info "Unexpected state in extract-emits" {:state state :term current-term})))))
+  )
+
 
 
 
