@@ -275,6 +275,17 @@
 (declare transform-body)
 (declare transform-module-body)
 
+(defn- is-anchor-node?
+  "Checks if a node represents a Rama anchor (e.g., <my-anchor>)."
+  [node]
+  (when (api/token-node? node)
+    (let [v (:value node)]
+      (and (symbol? v)
+           (let [s (str v)]
+             (and (> (count s) 2) ; Must be at least < >
+                  (str/starts-with? s "<")
+                  (str/ends-with? s ">")))))))
+
 ;; This is kinda the most important part of his this works
 ;; It splits an expression into 2 parts, using the emit `:>` to split on.
 ;; The right hand side of that will get bound in a `let`, with the left hand
@@ -290,24 +301,58 @@
 ;; This is used later on in `transform-form` to rewrite this as
 ;; (let [*hello (identity "Hello World")] ...)
 (defn- extract-emits
-  "Separate the output vars from an expression."
+  "Separate the expression, output variables, new bindings, and rebinds from a segment."
   [terms curr-ramavars]
-  (let [[exprs zero-arity-out out] (partition-by ; split output streams
-                                    (fn [x] (= :> (:k x)))
-                                    (rest terms))
-        [exprs out] (if (and (api/keyword-node? (first exprs))
-                             (= :> (:k (first exprs))))
-                      [[] zero-arity-out]
-                      [exprs out])
-        ramavars    (find-all-ramavars out)
-        new-vars    (set/difference ramavars curr-ramavars)
-        rebind      (set/intersection ramavars curr-ramavars)]
-    [(concat (list (first terms)) exprs)
-     out
-     (when (seq new-vars) (into [] new-vars))
-     (when (seq rebind) (into [] rebind))
-     ramavars]
-  ))
+  (loop [remaining-terms terms
+         op nil
+         inputs []
+         all-output-var-nodes [] ; Collect variable *nodes* here
+         state :op] ; states: :op, :inputs, :output-stream, :output-body
+    (let [term (first remaining-terms)
+          next-terms (rest remaining-terms)]
+      (cond
+        ;; End of terms, process collected data
+        (empty? remaining-terms)
+        (let [;; Calculate final vars based on collected output-vars
+              ramavars (find-all-ramavars all-output-var-nodes) ; Get symbols
+              new-vars (set/difference ramavars curr-ramavars)
+              rebinds  (set/intersection ramavars curr-ramavars)]
+          [(cons op inputs) ; Expression part (list of nodes)
+           all-output-var-nodes ; List of all output variable *nodes*
+           (when (seq new-vars) (into [] new-vars)) ; List of new variable *symbols*
+           (when (seq rebinds) (into [] rebinds)) ; List of rebound variable *symbols*
+           ramavars]) ; Set of all output variable *symbols*
+        
+        ;; Initial state: capture the operation
+        (= state :op)
+        (recur next-terms term inputs all-output-var-nodes :inputs)
+        
+        ;; If we find an emit keyword while expecting inputs, switch state
+        (and (= state :inputs) (emit-node? term))
+        (recur next-terms op inputs all-output-var-nodes :output-body)
+        
+        ;; State: capture input arguments
+        (= state :inputs)
+        (recur next-terms op (conj inputs term) all-output-var-nodes :inputs)
+        
+        ;; If we find another emit keyword while processing an output body,
+        ;; just stay in output-body state for the next term.
+        (and (= state :output-body) (emit-node? term))
+        (recur next-terms op inputs all-output-var-nodes :output-body)
+        
+        ;; State: process the body of an output stream declaration
+        (= state :output-body)
+        (if (is-anchor-node? term)
+          ;; It's an anchor, skip it and continue processing the output body
+          (recur next-terms op inputs all-output-var-nodes :output-body)
+          ;; It's not an anchor, assume it's a variable node
+          (recur next-terms op inputs (conj all-output-var-nodes term) :output-body))
+        
+        ;; Fallback/Error case (shouldn't ideally happen with correct input)
+        :else
+        (throw (ex-info "Unexpected state in extract-emits" {:state state :term term}))))))
+
+
 
 ;; This is handling the special case in query topologies where the input
 ;; ramavars might be empty, but there's still emit vars. Something such as:
