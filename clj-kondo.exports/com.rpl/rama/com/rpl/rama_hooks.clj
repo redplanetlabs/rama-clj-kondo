@@ -354,30 +354,6 @@
           (throw (ex-info "Unexpected state in extract-emits" {:state state :term current-term}))))))
   )
 
-(defn extract-emits
-  "Separate the output vars from an expression."
-  [terms curr-ramavars]
-  (println "Terms" terms)
-  (println "curr-ramavars" curr-ramavars)
-  (let [[exprs zero-arity-out out] (partition-by ; split output streams
-                                    (fn [x] (= :> (:k x)))
-                                    (rest terms))
-        [exprs out] (if (and (api/keyword-node? (first exprs))
-                             (= :> (:k (first exprs))))
-                      [[] zero-arity-out]
-                      [exprs out])
-        ramavars    (find-all-ramavars out)
-        new-vars    (set/difference ramavars curr-ramavars)
-        rebind      (set/intersection ramavars curr-ramavars)]
-    [(concat (list (first terms)) exprs)
-     out
-     (when (seq new-vars) (into [] new-vars))
-     (when (seq rebind) (into [] rebind))
-     ramavars]
-    ))
-
-
-
 ;; This is handling the special case in query topologies where the input
 ;; ramavars might be empty, but there's still emit vars. Something such as:
 ;;   (<<query-topology
