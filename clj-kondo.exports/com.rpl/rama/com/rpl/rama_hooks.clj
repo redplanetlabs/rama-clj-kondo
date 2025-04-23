@@ -348,9 +348,11 @@
         (throw (ex-info "Unexpected state in extract-emits" {:state state :term current-term})))))
   )
 
-(defn- extract-emits
+#_(defn extract-emits
   "Separate the output vars from an expression."
   [terms curr-ramavars]
+  (println "Terms" terms)
+  (println "curr-ramavars" curr-ramavars)
   (let [[exprs zero-arity-out out] (partition-by ; split output streams
                                     (fn [x] (= :> (:k x)))
                                     (rest terms))
@@ -366,7 +368,7 @@
      (when (seq new-vars) (into [] new-vars))
      (when (seq rebind) (into [] rebind))
      ramavars]
-  ))
+    ))
 
 
 
