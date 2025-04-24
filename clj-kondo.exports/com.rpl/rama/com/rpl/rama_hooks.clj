@@ -308,7 +308,8 @@
      []
      nil
      nil
-     #{}]
+     #{}
+     []]
     (loop [terms all-terms
            expr-nodes []
            all-output-var-nodes []
@@ -954,12 +955,12 @@
                 {::ramavars ramavars})
               following]))
 
-         (let [[expr out new-bindings rebinds new-vars]
+         (let [[expr out new-bindings rebinds new-vars found-anchors]
                (if (api/list-node? f)
                  (extract-emits children ramavars)
                  [f])]
            (if
-             (or new-bindings rebinds)
+             (or new-bindings rebinds (not-empty found-anchors))
              [(let [ramavars     (into ramavars new-vars)
                     follows      (transform-body following ramavars)
                     ramavars     (into ramavars (::ramavars (meta follows)))
@@ -990,15 +991,19 @@
                                     (api/list-node
                                      [(api/token-node 'identity) %]))
                                   rebinds)
+                    _ (println "found" found-anchors)
+                    anchor-binds (mapcat #(vector
+                                           %
+                                           (api/token-node nil))
+                                         found-anchors)
                     bind-expr    (with-meta
                                    (api/list-node
                                     (list*
                                      (api/token-node 'let)
                                      (api/vector-node
-                                      (if rebinds
-                                        (concat new-bindings
-                                                rebindings)
-                                        new-bindings))
+                                      (concat anchor-binds
+                                              new-bindings
+                                              rebindings))
                                      follows))
                                    {::ramavars ramavars})
                     ;; Produces
