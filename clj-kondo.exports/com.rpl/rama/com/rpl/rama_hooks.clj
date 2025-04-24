@@ -991,7 +991,6 @@
                                     (api/list-node
                                      [(api/token-node 'identity) %]))
                                   rebinds)
-                    _ (println "found" found-anchors)
                     anchor-binds (mapcat #(vector
                                            %
                                            (api/token-node nil))
@@ -1054,7 +1053,7 @@
 (defn transform-form
   ([f following] (transform-form* f following #{}))
   ([f following ramavars]
-   (let [[node _following :as out] (transform-form* f following ramavars)]
+   (let [[_node _following :as out] (transform-form* f following ramavars)]
      out)))
 
 (defn transform-body
