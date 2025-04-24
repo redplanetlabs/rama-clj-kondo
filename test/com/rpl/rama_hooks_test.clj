@@ -881,25 +881,6 @@
 
   (is
    (=
-    #_'(fn
-       []
-       (let
-           [$$user-total-spend "$$user-total-spend"]
-         (do
-           (microbatch)
-           (let
-               [*purchase-cents (microbatch)
-                *user-id (identity *user-id)]
-             (|hash *user-id)
-             (let
-                 [[*total-spend-cents] []]
-               (pr
-                $$user-total-spend
-                {*user-id (+sum
-                           *purchase-cents
-                           :new-val> *total-spend-cents)})
-               [*user-id *total-spend-cents])))))
-    
     '(fn
         []
         (let [$$user-total-spend "$$user-total-spend"]
