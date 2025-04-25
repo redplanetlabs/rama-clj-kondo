@@ -230,7 +230,7 @@
               first
               :message)))))
 
-(deftest multiple-ouputs
+(deftest multiple-outputs
   (is (= '(let [[*one *two] (identity 1)] (pr *one))
          (body->sexpr
           (transform-sexprs
@@ -255,6 +255,15 @@
          (body->sexpr
           (transform-sexprs
            '(identity 1 :other> <other> *three :> *one *two)
+           '(pr *one)))))
+  
+  (is (= '(let [<other> nil
+                <test> nil
+                [*three *one *two] (identity 1)]
+            (pr *one))
+         (body->sexpr
+          (transform-sexprs
+           '(identity 1 :other> <other> *three :> <test> *one *two)
            '(pr *one))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
