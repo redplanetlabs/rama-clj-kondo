@@ -230,6 +230,42 @@
               first
               :message)))))
 
+(deftest multiple-outputs
+  (is (= '(let [[*one *two] (identity 1)] (pr *one))
+         (body->sexpr
+          (transform-sexprs
+           '(identity 1 :> *one *two)
+           '(pr *one)))))
+  
+  (is (= '(let [[*one *two *three] (identity 1)] (pr *one))
+         (body->sexpr
+          (transform-sexprs
+           '(identity 1 :> *one *two :other> *three)
+           '(pr *one)))))
+  
+  (is (= '(let [[*three *one *two] (identity 1)] (pr *one))
+         (body->sexpr
+          (transform-sexprs
+           '(identity 1 :other> *three :> *one *two)
+           '(pr *one)))))
+  
+  (is (= '(let [<other> nil
+                [*three *one *two] (identity 1)]
+            (pr *one))
+         (body->sexpr
+          (transform-sexprs
+           '(identity 1 :other> <other> *three :> *one *two)
+           '(pr *one)))))
+  
+  (is (= '(let [<other> nil
+                <test> nil
+                [*three *one *two] (identity 1)]
+            (pr *one))
+         (body->sexpr
+          (transform-sexprs
+           '(identity 1 :other> <other> *three :> <test> *one *two)
+           '(pr *one))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Top level forms tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -855,23 +891,19 @@
   (is
    (=
     '(fn
-      []
-      (let
-       [$$user-total-spend "$$user-total-spend"]
-       (do
-        (microbatch)
-        (let
-         [*purchase-cents (microbatch)
-          *user-id (identity *user-id)]
-         (|hash *user-id)
-         (let
-          [[*total-spend-cents] []]
-          (pr
-           $$user-total-spend
-           {*user-id (+sum
-                      *purchase-cents
-                      :new-val> *total-spend-cents)})
-          [*user-id *total-spend-cents])))))
+        []
+        (let [$$user-total-spend "$$user-total-spend"]
+          (do (microbatch)
+              (let
+                  [*purchase-cents (microbatch)
+                   *user-id (identity *user-id)]
+                (|hash *user-id)
+                (let [[*total-spend-cents] []]
+                  (pr $$user-total-spend
+                      {*user-id (do (+sum *purchase-cents)
+                                    (let [*total-spend-cents (identity *total-spend-cents)]))})
+                  [*user-id *total-spend-cents])))))
+
     (node->sexpr
      (rama/batch<--hook
       (sexpr->node

@@ -1,4 +1,7 @@
 {:deps    {clj-kondo/clj-kondo {:mvn/version "2023.10.20"}
            org.clojure/clojure {:mvn/version "1.11.1"}}
  :paths   ["clj-kondo.exports/com.rpl/rama" "test"]
- :aliases {:test {:extra-paths ["test"]}}}
+ :aliases {:test {:extra-paths ["test"]
+                  :extra-deps {lambdaisland/kaocha {:mvn/version "1.87.1366"}}
+                  ;; run tests with clojure -M:test
+                  :main-opts ["-m" "kaocha.runner"]}}}
