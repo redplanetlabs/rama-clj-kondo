@@ -1238,15 +1238,15 @@
   Turns the form into a Clojure `defn`."
   [{:keys [node]}]
   (let [m        (meta node)
-        [_ name & rest-args] (:children node)]
+        [_ name & name-and-rest] (:children node)]
     ;; Validate name first
     (err/maybe-missing-def-name name m)
     
     ;; Parse optional docstring
-    (let [has-docstring? (and (seq rest-args) (api/string-node? (first rest-args)))
-          docstring (when has-docstring? (first rest-args))
-          input (if has-docstring? (second rest-args) (first rest-args))
-          children (if has-docstring? (drop 2 rest-args) (rest rest-args))]
+    (let [has-docstring? (and (seq name-and-rest) (api/string-node? (first name-and-rest)))
+          docstring (when has-docstring? (first name-and-rest))
+          input (if has-docstring? (second name-and-rest) (first name-and-rest))
+          children (if has-docstring? (drop 2 name-and-rest) (rest name-and-rest))]
       ;; Validate input vector after parsing
       (err/maybe-missing-input-vector input m)
       
