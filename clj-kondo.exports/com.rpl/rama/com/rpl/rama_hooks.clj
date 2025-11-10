@@ -1238,13 +1238,20 @@
   Turns the form into a Clojure `defn`."
   [{:keys [node]}]
   (let [m        (meta node)
-        [_ name input & children] (:children node)
+        [_ name & rest-args] (:children node)
+        ;; Parse optional docstring
+        has-docstring? (and (seq rest-args) (api/string-node? (first rest-args)))
+        docstring (when has-docstring? (first rest-args))
+        input (if has-docstring? (second rest-args) (first rest-args))
+        children (if has-docstring? (drop 2 rest-args) (rest rest-args))
+        ;; Build defn form with optional docstring
+        defn-parts (cond-> [(api/token-node 'defn) name]
+                     has-docstring? (conj docstring)
+                     :always (conj input))
         new-node (api/list-node
-                  (list* (api/token-node 'defn)
-                         name
-                         input
-                         (binding [*context* :dataflow]
-                           (transform-body children))))]
+                  (concat defn-parts
+                          (binding [*context* :dataflow]
+                            (transform-body children))))]
     (err/maybe-missing-def-name name m)
     (err/maybe-missing-input-vector input m)
 
