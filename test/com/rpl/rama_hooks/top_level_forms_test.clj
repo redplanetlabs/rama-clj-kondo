@@ -2,7 +2,7 @@
   "Tests for top-level form transformations like defbasicsegmacro, 
    defbasicblocksegmacro, and top-level block hooks."
   (:require
-   [clojure.test :refer [deftest is]]
+   [clojure.test :refer [deftest is testing]]
    [com.rpl.rama-hooks :as rama]
    [com.rpl.test-helpers :refer [node->sexpr sexpr->node]]))
 
@@ -59,9 +59,26 @@
              (sexpr->node '(<<atomic (identity 1 :> *x)))))))))
 
 (deftest defn-like-hook-test
+  ;; Tests transformation of deframaop and deframafn forms to defn.
+  ;; Contracts: both forms support optional docstrings and transform correctly.
   (let [f (fn [form]
             (node->sexpr
              (rama/deframaop-hook
               (sexpr->node form))))]
-    (is (= '(defn f [] (:> nil)) (f '(deframaop f [] (:>)))))
-    (is (= '(defn f [*a] (:> nil)) (f '(deframafn f [*a] (:>)))))))
+    (testing "deframaop without docstring"
+      (is (= '(defn f [] (:> nil)) (f '(deframaop f [] (:>))))))
+    
+    (testing "deframaop with docstring"
+      (is (= '(defn f "A function" [] (:> nil))
+             (f '(deframaop f "A function" [] (:>))))))
+    
+    (testing "deframafn without docstring"
+      (is (= '(defn f [*a] (:> nil)) (f '(deframafn f [*a] (:>))))))
+    
+    (testing "deframafn with docstring"
+      (is (= '(defn f "Takes a value" [*a] (:> nil))
+             (f '(deframafn f "Takes a value" [*a] (:>))))))
+    
+    (testing "deframaop with multi-line docstring"
+      (is (= '(defn f "Line 1\nLine 2" [] (:> nil))
+             (f '(deframaop f "Line 1\nLine 2" [] (:>))))))))
