@@ -1238,24 +1238,27 @@
   Turns the form into a Clojure `defn`."
   [{:keys [node]}]
   (let [m        (meta node)
-        [_ name & rest-args] (:children node)
-        ;; Parse optional docstring
-        has-docstring? (and (seq rest-args) (api/string-node? (first rest-args)))
-        docstring (when has-docstring? (first rest-args))
-        input (if has-docstring? (second rest-args) (first rest-args))
-        children (if has-docstring? (drop 2 rest-args) (rest rest-args))
-        ;; Build defn form with optional docstring
-        defn-parts (cond-> [(api/token-node 'defn) name]
-                     has-docstring? (conj docstring)
-                     :always (conj input))
-        new-node (api/list-node
-                  (concat defn-parts
-                          (binding [*context* :dataflow]
-                            (transform-body children))))]
+        [_ name & rest-args] (:children node)]
+    ;; Validate name first
     (err/maybe-missing-def-name name m)
-    (err/maybe-missing-input-vector input m)
-
-    {:node (with-meta new-node m)}))
+    
+    ;; Parse optional docstring
+    (let [has-docstring? (and (seq rest-args) (api/string-node? (first rest-args)))
+          docstring (when has-docstring? (first rest-args))
+          input (if has-docstring? (second rest-args) (first rest-args))
+          children (if has-docstring? (drop 2 rest-args) (rest rest-args))]
+      ;; Validate input vector after parsing
+      (err/maybe-missing-input-vector input m)
+      
+      ;; Build defn form with optional docstring
+      (let [defn-parts (cond-> [(api/token-node 'defn) name]
+                         has-docstring? (conj docstring)
+                         :always (conj input))
+            new-node (api/list-node
+                      (concat defn-parts
+                              (binding [*context* :dataflow]
+                                (transform-body children))))]
+        {:node (with-meta new-node m)}))))
 
 (defn defoperation-hook
   "Transform a Rama `defoperation`
