@@ -1300,106 +1300,15 @@
 ;;; Clojure interop tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest clj!-test
-  (is (= '(clj! (let [m {:a 1 :b 2}]
-                  (prn (:a m))))
-         (body->sexpr
-          (transform-sexprs
-           '(clj! (let [m {:a 1 :b 2}]
-                    (prn (:a m))))))))
-
-  (is (= '(let [*a (identity 1)]
-            (let [*b (identity 2)]
-              (let [*c (+ 3 (clj!
-                             (let [m {:a *a :b *b}]
-                               (reduce (fn [a v] (+ a v)) (vals m)))))]
-                (prn *c))
-              ))
-         (body->sexpr
-          (transform-sexprs
-           '(identity 1 :> *a)
-           '(identity 2 :> *b)
-           '(+ 3 (clj! (let [m {:a *a :b *b}]
-                         (reduce (fn [a v] (+ a v)) (vals m))))
-               :> *c)
-           '(prn *c)
-          )))))
+;; Moved to test/com/rpl/rama_hooks/interop_test.clj
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Java interop tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest java-block<--test
-  (is
-   (=
-    '(let
-      [_ (pr) [*aVar] []]
-      (pr [*aVar])
-      (.aMacro
-       "*aVar"
-       (java-block<-
-        (let
-         [*bVar (identity 1)]
-         (let [*c (+ *aVar *bVar)]))))
-      (pr "*aVar")
-     )
-    (body->sexpr
-     (transform-sexprs
-      '(java-macro!
-        (.aMacro
-         "*aVar"
-         (java-block<-
-          (identity 1 :> *bVar)
-          (+ *aVar *bVar :> *c))))
-      '(pr "*aVar"))))))
+;; Moved to test/com/rpl/rama_hooks/interop_test.clj
 
-(deftest java-macro!-test
-  (is
-   (= '(let
-        [_ (pr) [*user-id] []]
-        (pr [*user-id])
-        (.genid id-gen "*user-id"))
-      (body->sexpr
-       (transform-sexprs
-        '(java-macro! (.genid id-gen "*user-id"))))))
-
-  (is
-   (= '(let
-        [_ (pr) [*a !b %c] []]
-        (pr [*a !b %c])
-        (.genid id-gen "*a" "!b" "%c"))
-      (body->sexpr
-       (transform-sexprs
-        '(java-macro! (.genid id-gen "*a" "!b" "%c"))))))
-
-  (is (= '(let [_ (pr) [] []] (pr []) (.genid id-gen "*a b"))
-         (body->sexpr
-          (transform-sexprs
-           '(java-macro! (.genid id-gen "*a b"))))))
-
-  (is (= '(let [_ (pr) [] []] (pr []) (.genid id-gen "something"))
-         (body->sexpr
-          (transform-sexprs '(java-macro! (.genid id-gen "something"))))))
-
-  (is
-   (=
-    '(let
-      [*a (identity 1)]
-      (let
-       [*b (identity 2)]
-       (let
-        [_ (pr *b *a) [*c] []]
-        (pr [*c])
-        (.sum "*a" "*b" "*c")
-        (pr *c)
-       )))
-    (body->sexpr
-     (transform-sexprs
-      '(identity 1 :> *a)
-      '(identity 2 :> *b)
-      '(java-macro!
-        (.sum "*a" "*b" "*c"))
-      '(pr *c))))))
+;; Moved to test/com/rpl/rama_hooks/interop_test.clj
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Rama demo gallery example tests
