@@ -17,18 +17,17 @@ You can get clj-kondo to import the linting rules for Rama by running:
 clj-kondo --lint "$(clojure -Spath)" --copy-configs --skip-lint
 ```
 
-or 
+or
 
 ``` sh
 clj-kondo --lint "$(lein classpath)" --copy-configs --skip-lint
 ```
 
-If you're using leiningen. 
+If you're using leiningen.
 
-Note that if your dependency on Rama is specified under a specific alias or 
-profile, you need to make sure to include that in the `clojure` or `lein` 
+Note that if your dependency on Rama is specified under a specific alias or
+profile, you need to make sure to include that in the `clojure` or `lein`
 command. Otherwise the Rama jar won't be on the classpath.
-
 
 ## Roadmap 
 
@@ -89,4 +88,24 @@ Since having access to the following forms is important for the transformation
 rules, hooks in the `config.edn` are only defined for top-level forms. 
 Transformation rules for special Rama forms, such as `<<if` or `batch<-` are 
 written as extensions of the `split-form` or `handle-form` methods in 
-`rama_hooks.clj`. 
+`rama_hooks.clj`.
+
+## Development
+
+### Git Hooks
+
+This project includes scripts to install Git hooks for maintaining code quality:
+
+**Pre-commit hook** - Automatically formats `.clj` and `.edn` files using cljfmt when you commit:
+
+``` sh
+./scripts/install-pre-commit-hook.sh
+```
+
+**Pre-push hook** - Runs clj-kondo linting before pushing to prevent pushing code with warnings or errors:
+
+``` sh
+./scripts/install-pre-push-hook.sh
+```
+
+The pre-push hook will block pushes if clj-kondo finds any issues in the project. 

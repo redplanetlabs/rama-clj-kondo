@@ -4,8 +4,7 @@
      [clj-kondo.impl.utils :as utils]
      [clojure.test :refer [deftest is testing]]
      [com.rpl.errors :as err]
-     [com.rpl.test-helpers :refer [body->sexpr get-error-messages
-                                   get-first-error-message sexpr->node
+     [com.rpl.test-helpers :refer [body->sexpr
                                    transform-sexprs with-testing-context]]))
 
 ;;; Tests for Rama branching constructs: <<if, <<switch, <<cond, <<sources, <<subsource

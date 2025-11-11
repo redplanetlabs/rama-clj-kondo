@@ -1,7 +1,7 @@
 (ns com.rpl.rama-hooks.validation-test
     (:require
      [clj-kondo.impl.utils :as utils]
-     [clojure.test :refer [deftest is testing]]
+     [clojure.test :refer [deftest is]]
      [com.rpl.errors :as err]
      [com.rpl.rama-hooks :as rama]
      [com.rpl.test-helpers :refer [body->sexpr
