@@ -1,0 +1,7 @@
+{:linters {:unresolved-var {:exclude [com.rpl.rama-hooks/illegal-forms
+                                      com.rpl.rama-hooks/*context*
+                                      com.rpl.rama-hooks/foreign-select-hook
+                                      com.rpl.errors/syntax-error-keyword-fn-in-dataflow
+                                      com.rpl.errors/syntax-error-lambda-fn-in-foreign-select
+                                      com.rpl.errors/syntax-error-illegal-special-form
+                                      com.rpl.errors/syntax-error-java-interop-in-dataflow]}}}

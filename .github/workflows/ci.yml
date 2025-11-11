@@ -1,0 +1,61 @@
+name: Lint and Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  ci-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+          key: deps-${{ hashFiles('deps.edn') }}
+          restore-keys: deps-${{ runner.os }}-
+
+      - name: Install Clojure CLI
+        uses: DeLaGuardo/setup-clojure@13.0
+        with:
+          cli: latest
+          clj-kondo: latest
+
+      - name: Run cljfmt check
+        id: cljfmt
+        continue-on-error: true
+        run: clojure -M:cljfmt check
+
+      - name: Run clj-kondo linting
+        id: clj-kondo
+        continue-on-error: true
+        run: clj-kondo --lint . --fail-level warning
+
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        run: clojure -M:test
+
+      - name: Check results
+        if: steps.cljfmt.outcome == 'failure' || steps.clj-kondo.outcome == 'failure' || steps.tests.outcome == 'failure'
+        run: |
+          echo "One or more checks failed:"
+          echo "  cljfmt: ${{ steps.cljfmt.outcome }}"
+          echo "  clj-kondo: ${{ steps.clj-kondo.outcome }}"
+          echo "  tests: ${{ steps.tests.outcome }}"
+          exit 1
