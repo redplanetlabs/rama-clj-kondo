@@ -43,7 +43,7 @@ jobs:
       - name: Run clj-kondo linting
         id: clj-kondo
         continue-on-error: true
-        run: clj-kondo --lint .
+        run: clj-kondo --lint . --fail-level warning
 
       - name: Run tests
         id: tests
