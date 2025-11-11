@@ -1,17 +1,17 @@
 (ns com.rpl.rama-hooks.special-forms-test
-  (:require
-   [clj-kondo.hooks-api :as api]
-   [clojure.test :refer [deftest is testing]]
-   [com.rpl.errors :as err]
-   [com.rpl.rama-hooks :as rama]
-   [com.rpl.test-helpers :refer [body->sexpr
-                                  get-error-messages
-                                  get-first-error-message
-                                  node->sexpr
-                                  sexpr->node
-                                  transform-sexprs
-                                  with-testing-context
-                                  ->sexpr]]))
+    (:require
+     [clj-kondo.hooks-api :as api]
+     [clojure.test :refer [deftest is testing]]
+     [com.rpl.errors :as err]
+     [com.rpl.rama-hooks :as rama]
+     [com.rpl.test-helpers :refer [body->sexpr
+                                   get-error-messages
+                                   get-first-error-message
+                                   node->sexpr
+                                   sexpr->node
+                                   transform-sexprs
+                                   with-testing-context
+                                   ->sexpr]]))
 
 ;;; Tests for special Rama forms that define new syntax or have special scoping rules.
 ;;; Covers: emit tokens, query topologies, batch/loop processing, ramaops, anchors, and aggregations.
@@ -44,11 +44,11 @@
   (is
    (=
     '(fn
-       name
-       []
-       (let
-           [*ret (identity :x)]
-           [*ret]))
+      name
+      []
+      (let
+       [*ret (identity :x)]
+       [*ret]))
     (body->sexpr
      (rama/transform-module-form
       (->sexpr
@@ -64,22 +64,22 @@
   (is
    (=
     '(fn
-       name
-       [*url *start-bucket *end-bucket]
-       (|hash *url)
+      name
+      [*url *start-bucket *end-bucket]
+      (|hash *url)
+      (let
+       [[*granularity *gstart *gend]
+        (explode (query-granularities :m *start-bucket *end-bucket))]
        (let
-           [[*granularity *gstart *gend]
-            (explode (query-granularities :m *start-bucket *end-bucket))]
-           (let
-               [*bucket-stat
-                (local-select>
-                 [(keypath *url *granularity)
-                  (sorted-map-range *gstart *gend) MAP-VALS]
-                 $$window-stats)]
-               (|origin)
-               (let
-                   [*stats (+combine-measurements *bucket-stat)]
-                   [*stats]))))
+        [*bucket-stat
+         (local-select>
+          [(keypath *url *granularity)
+           (sorted-map-range *gstart *gend) MAP-VALS]
+          $$window-stats)]
+        (|origin)
+        (let
+         [*stats (+combine-measurements *bucket-stat)]
+         [*stats]))))
     (-> '(<<query-topology
           topologies
           "name"
@@ -114,18 +114,18 @@
   (is
    (=
     '(fn
-        []
-        (let [$$user-total-spend "$$user-total-spend"]
-          (do (microbatch)
-              (let
-                  [*purchase-cents (microbatch)
-                   *user-id (identity *user-id)]
+      []
+      (let [$$user-total-spend "$$user-total-spend"]
+           (do (microbatch)
+               (let
+                [*purchase-cents (microbatch)
+                 *user-id (identity *user-id)]
                 (|hash *user-id)
                 (let [[*total-spend-cents] []]
-                  (pr $$user-total-spend
-                      {*user-id (do (+sum *purchase-cents)
-                                    (let [*total-spend-cents (identity *total-spend-cents)]))})
-                  [*user-id *total-spend-cents])))))
+                     (pr $$user-total-spend
+                         {*user-id (do (+sum *purchase-cents)
+                                       (let [*total-spend-cents (identity *total-spend-cents)]))})
+                     [*user-id *total-spend-cents])))))
 
     (node->sexpr
      (rama/batch<--hook
@@ -159,51 +159,51 @@
         (<<if
          (pos? !res)
          (:> !res)
-        (else>)
+         (else>)
          (continue> (+ !res 1))))
       '(pr !ret))))))
 
 (deftest <<ramaop-test
   (testing "Making sure that ramaop works in no context"
-    (is
-     (=
-      '(letfn
-        [(%op
-          [*a *b]
-          (let
-           [*c (trampoline + *a *b)]
-           (:> *c)))])
-      (api/sexpr
-       (first
-        (transform-sexprs
-         '(<<ramaop
-           %op
-           [*a *b]
-           (+ *a *b :> *c)
-           (:> *c))))))))
+           (is
+            (=
+             '(letfn
+               [(%op
+                 [*a *b]
+                 (let
+                  [*c (trampoline + *a *b)]
+                  (:> *c)))])
+             (api/sexpr
+              (first
+               (transform-sexprs
+                '(<<ramaop
+                  %op
+                  [*a *b]
+                  (+ *a *b :> *c)
+                  (:> *c))))))))
 
   (testing "Testing that it correctly defines something in a greater scope"
-    (is
-     (=
-      '(letfn
-        [(%f
-          [*a *b]
-          (let
-           [*c (trampoline + *a *b)]
-           (:> *c)))]
-        (let
-         [*sum (trampoline %f 1 2)]
-         (trampoline pr *sum)))
-      (api/sexpr
-       (first
-        (transform-sexprs
-         '(<<ramaop
-           %f
-           [*a *b]
-           (+ *a *b :> *c)
-           (:> *c))
-         '(%f 1 2 :> *sum)
-         '(pr *sum)))))))
+           (is
+            (=
+             '(letfn
+               [(%f
+                 [*a *b]
+                 (let
+                  [*c (trampoline + *a *b)]
+                  (:> *c)))]
+               (let
+                [*sum (trampoline %f 1 2)]
+                (trampoline pr *sum)))
+             (api/sexpr
+              (first
+               (transform-sexprs
+                '(<<ramaop
+                  %f
+                  [*a *b]
+                  (+ *a *b :> *c)
+                  (:> *c))
+                '(%f 1 2 :> *sum)
+                '(pr *sum)))))))
 
   (is
    (=
@@ -228,35 +228,34 @@
 
   (with-testing-context
    "Missing ramaop name"
-   (transform-sexprs
-    '(<<ramaop
-      [*curr]
-      (:> (- *curr *amt))))
+    (transform-sexprs
+     '(<<ramaop
+       [*curr]
+       (:> (- *curr *amt))))
 
-   (is (= err/syntax-error-missing-def-name (get-first-error-message)))
-   (is (= 1 (count (get-error-messages)))))
+    (is (= err/syntax-error-missing-def-name (get-first-error-message)))
+    (is (= 1 (count (get-error-messages)))))
 
   (with-testing-context
    "Invalid ramaop name"
-   (transform-sexprs
-    '(<<ramaop
-      *deduct
-      [*curr]
-      (:> (- *curr *amt))))
+    (transform-sexprs
+     '(<<ramaop
+       *deduct
+       [*curr]
+       (:> (- *curr *amt))))
 
-   (is (= err/syntax-error-invalid-ramaop-name (get-first-error-message)))
-   (is (= 1 (count (get-error-messages)))))
+    (is (= err/syntax-error-invalid-ramaop-name (get-first-error-message)))
+    (is (= 1 (count (get-error-messages)))))
 
   (with-testing-context
    "Missing input vector"
-   (transform-sexprs
-    '(<<ramaop
-      %deduct
-      (:> (- *curr *amt))))
+    (transform-sexprs
+     '(<<ramaop
+       %deduct
+       (:> (- *curr *amt))))
 
-   (is (= err/syntax-error-missing-input-vector (get-first-error-message)))
-   (is (= 1 (count (get-error-messages)))))
-)
+    (is (= err/syntax-error-missing-input-vector (get-first-error-message)))
+    (is (= 1 (count (get-error-messages))))))
 
 (deftest depot-partition-append-test
   (is (=
@@ -319,8 +318,7 @@
         !k
         (+combine-extra-sum [1] !v :> !cs)
         (+accum-extra-sum [!n] !v :> !as))
-      '(pr !k !cs !as)))
-   ))
+      '(pr !k !cs !as)))))
 
   (is
    (=
@@ -348,5 +346,4 @@
            !k
            (+avg !v :> !avg)
            (+count :> !count))
-          (v-swap! captured conj {!k [!avg !count]}))))))
-   )))
+          (v-swap! captured conj {!k [!avg !count]})))))))))
