@@ -1238,17 +1238,27 @@
   Turns the form into a Clojure `defn`."
   [{:keys [node]}]
   (let [m        (meta node)
-        [_ name input & children] (:children node)
-        new-node (api/list-node
-                  (list* (api/token-node 'defn)
-                         name
-                         input
-                         (binding [*context* :dataflow]
-                           (transform-body children))))]
+        [_ name & name-and-rest] (:children node)]
+    ;; Validate name first
     (err/maybe-missing-def-name name m)
-    (err/maybe-missing-input-vector input m)
-
-    {:node (with-meta new-node m)}))
+    
+    ;; Detect and extract optional docstring between name and input vector
+    (let [has-docstring? (and (seq name-and-rest) (api/string-node? (first name-and-rest)))
+          docstring (when has-docstring? (first name-and-rest))
+          input (if has-docstring? (second name-and-rest) (first name-and-rest))
+          children (if has-docstring? (drop 2 name-and-rest) (rest name-and-rest))]
+      ;; Validate input vector after parsing
+      (err/maybe-missing-input-vector input m)
+      
+      ;; Build defn form with optional docstring
+      (let [defn-parts (concat [(api/token-node 'defn) name]
+                               (when has-docstring? [docstring])
+                               [input])
+            new-node (api/list-node
+                      (concat defn-parts
+                              (binding [*context* :dataflow]
+                                (transform-body children))))]
+        {:node (with-meta new-node m)}))))
 
 (defn defoperation-hook
   "Transform a Rama `defoperation`
