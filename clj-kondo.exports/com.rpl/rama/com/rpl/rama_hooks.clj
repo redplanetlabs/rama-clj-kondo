@@ -1251,9 +1251,9 @@
       (err/maybe-missing-input-vector input m)
       
       ;; Build defn form with optional docstring
-      (let [defn-parts (cond-> [(api/token-node 'defn) name]
-                         has-docstring? (conj docstring)
-                         :always (conj input))
+      (let [defn-parts (concat [(api/token-node 'defn) name]
+                               (when has-docstring? [docstring])
+                               [input])
             new-node (api/list-node
                       (concat defn-parts
                               (binding [*context* :dataflow]
