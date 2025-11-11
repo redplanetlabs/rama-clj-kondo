@@ -1,0 +1,8 @@
+{:indentation? true
+ :remove-surrounding-whitespace? true
+ :remove-trailing-whitespace? true
+ :remove-consecutive-blank-lines? true
+ :insert-missing-whitespace? true
+ :align-associative? false
+ :indents {with-testing-context [[:block 1]]
+           deftest [[:block 1]]}}
