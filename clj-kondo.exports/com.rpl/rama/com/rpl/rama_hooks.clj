@@ -1242,7 +1242,7 @@
     ;; Validate name first
     (err/maybe-missing-def-name name m)
     
-    ;; Parse optional docstring
+    ;; Detect and extract optional docstring between name and input vector
     (let [has-docstring? (and (seq name-and-rest) (api/string-node? (first name-and-rest)))
           docstring (when has-docstring? (first name-and-rest))
           input (if has-docstring? (second name-and-rest) (first name-and-rest))
