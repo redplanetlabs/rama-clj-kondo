@@ -1,6 +1,7 @@
 (ns com.rpl.rama-hooks.basic-test
     (:require
      [clj-kondo.hooks-api :as api]
+     [clj-kondo.impl.utils :as utils]
      [clojure.test :refer [deftest is testing]]
      [com.rpl.errors :as err]
      [com.rpl.rama-hooks :as rama]
@@ -162,7 +163,7 @@
                          [(keypath *from-user-id) (term %deduct)] $$funds)))))))
 
     (is (= err/syntax-error-keyword-fn-in-dataflow
-           (-> clj-kondo.impl.utils/*ctx*
+           (-> utils/*ctx*
                :findings
                deref
                first
