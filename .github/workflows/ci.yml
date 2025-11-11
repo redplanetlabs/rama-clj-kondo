@@ -27,7 +27,7 @@ jobs:
             ~/.m2/repository
             ~/.gitlibs
           key: deps-${{ hashFiles('deps.edn') }}
-          restore-keys: deps-
+          restore-keys: deps-${{ runner.os }}-
 
       - name: Install Clojure CLI
         uses: DeLaGuardo/setup-clojure@13.0
