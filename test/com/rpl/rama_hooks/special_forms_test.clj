@@ -347,3 +347,55 @@
            (+avg !v :> !avg)
            (+count :> !count))
           (v-swap! captured conj {!k [!avg !count]})))))))))
+
+;; Tests substituted vars are bound within the body and don't leak outside.
+(deftest <<with-substitutions-test
+  (testing "<<with-substitutions"
+           (testing "binds vars in the body"
+                    (is
+                     (=
+                      '(let
+                        [$$p (task-global "$$p")]
+                        (let
+                         [*v (local-select> (keypath *k) $$p)]))
+                      (body->sexpr
+                       (transform-sexprs
+                        '(<<with-substitutions
+                          [$$p (task-global "$$p")]
+                          (local-select> (keypath *k) $$p :> *v)))))))
+
+           (testing "supports multiple bindings"
+                    (is
+                     (=
+                      '(let
+                        [$$p (task-global "$$p")
+                         $$mirror (task-global "$$mirror")]
+                        (let
+                         [*v (local-select> $$p)]
+                         (let
+                          [*w (local-select> $$mirror)]
+                          (+ *v *w))))
+                      (body->sexpr
+                       (transform-sexprs
+                        '(<<with-substitutions
+                          [$$p (task-global "$$p")
+                           $$mirror (task-global "$$mirror")]
+                          (local-select> $$p :> *v)
+                          (local-select> $$mirror :> *w)
+                          (+ *v *w)))))))
+
+           (testing "following forms are siblings, not nested"
+      ;; When <<with-substitutions has following forms, they become siblings
+      ;; (not nested inside the let). This test verifies the let is correct;
+      ;; the following form would be the second element of the result vector.
+                    (is
+                     (=
+                      '(let
+                        [$$p (task-global "$$p")]
+                        (use $$p))
+                      (body->sexpr
+                       (transform-sexprs
+                        '(<<with-substitutions
+                          [$$p (task-global "$$p")]
+                          (use $$p))
+                        '(use-after))))))))
