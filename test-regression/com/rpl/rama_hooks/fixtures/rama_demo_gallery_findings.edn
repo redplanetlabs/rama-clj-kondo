@@ -1,0 +1,107 @@
+[{:filename "src/main/clj/rama/gallery/bank_transfer_module.clj",
+  :row 5,
+  :col 14,
+  :level :warning,
+  :type :unused-namespace,
+  :message "namespace com.rpl.rama.ops is required but never used"}
+ {:filename
+  "src/main/clj/rama/gallery/migrations_music_catalog_modules.clj",
+  :row 127,
+  :col 9,
+  :level :error,
+  :type :unresolved-symbol,
+  :message "Unresolved symbol: migrated"}
+ {:filename "src/main/clj/rama/gallery/profile_module.clj",
+  :row 4,
+  :col 14,
+  :level :warning,
+  :type :unused-namespace,
+  :message "namespace com.rpl.rama.aggs is required but never used"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 4,
+  :col 14,
+  :level :warning,
+  :type :unused-namespace,
+  :message "namespace com.rpl.rama.aggs is required but never used"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 5,
+  :col 14,
+  :level :warning,
+  :type :unused-namespace,
+  :message "namespace com.rpl.rama.ops is required but never used"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 36,
+  :col 20,
+  :level :warning,
+  :type :unused-binding,
+  :message "unused binding this"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 36,
+  :col 25,
+  :level :warning,
+  :type :unused-binding,
+  :message "unused binding task-id"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 36,
+  :col 33,
+  :level :warning,
+  :type :unused-binding,
+  :message "unused binding task-global-context"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 38,
+  :col 11,
+  :level :warning,
+  :type :unused-binding,
+  :message "unused binding this"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 41,
+  :col 24,
+  :level :warning,
+  :type :unused-binding,
+  :message "unused binding this"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 46,
+  :col 4,
+  :level :error,
+  :type :unresolved-symbol,
+  :message "Unresolved symbol: o"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 46,
+  :col 6,
+  :level :error,
+  :type :unresolved-symbol,
+  :message "Unresolved symbol: data-output"}
+ {:filename
+  "src/main/clj/rama/gallery/rest_api_integration_module.clj",
+  :row 48,
+  :col 41,
+  :level :error,
+  :type :unresolved-symbol,
+  :message "Unresolved symbol: data-input"}
+ {:filename "src/main/clj/rama/gallery/time_series_module.clj",
+  :row 4,
+  :col 14,
+  :level :warning,
+  :type :unused-namespace,
+  :message "namespace com.rpl.rama.aggs is required but never used"}
+ {:filename "src/main/clj/rama/gallery/time_series_module.clj",
+  :row 109,
+  :col 18,
+  :level :warning,
+  :type :missing-else-branch,
+  :message "Missing else branch."}
+ {:filename "src/main/clj/rama/gallery/top_users_module.clj",
+  :row 5,
+  :col 14,
+  :level :warning,
+  :type :unused-namespace,
+  :message "namespace com.rpl.rama.ops is required but never used"}]

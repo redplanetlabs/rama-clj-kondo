@@ -1,0 +1,24 @@
+[{:filename "src/rama_clojure_starter/my_module.clj",
+  :row 4,
+  :col 14,
+  :level :warning,
+  :type :unused-namespace,
+  :message "namespace com.rpl.rama.aggs is required but never used"}
+ {:filename "src/rama_clojure_starter/my_module.clj",
+  :row 5,
+  :col 14,
+  :level :warning,
+  :type :unused-namespace,
+  :message "namespace com.rpl.rama.ops is required but never used"}
+ {:filename "src/rama_clojure_starter/my_module.clj",
+  :row 7,
+  :col 22,
+  :level :warning,
+  :type :unused-binding,
+  :message "unused binding setup"}
+ {:filename "src/rama_clojure_starter/my_module.clj",
+  :row 7,
+  :col 28,
+  :level :warning,
+  :type :unused-binding,
+  :message "unused binding topologies"}]

@@ -3,3 +3,4 @@
 .lsp
 .clj-kondo/
 .clj-kondo.exports/.clj-kondo 
+test-regression/checkouts/
