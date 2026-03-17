@@ -75,8 +75,7 @@
       (->>
        (mapv api/sexpr body)
        (flatten)
-       (into #{} (comp (map pstate-or-nil) (remove nil?)))
-       (into [])))
+       (into #{} (comp (map pstate-or-nil) (remove nil?)))))
 
 (defn find-all-ramavars
       "Given an expression, flatten the whole thing and return a set of every
@@ -109,50 +108,48 @@
             :else x))
        sexpr))
 
-(defn wrap-do
-      "Wraps an expression in a `do`"
-      [body]
-      (if (= 1 (count body))
-          (first body)
-          (api/list-node
-           (list*
-            (api/token-node 'do)
-            body))))
+(defn- wrap-form
+       "Wraps body in a form with the given token, or returns the single node unwrapped."
+       [token body]
+       (if (= 1 (count body))
+           (first body)
+           (api/list-node
+            (list*
+             (api/token-node token)
+             body))))
 
-(defn wrap-<<do
-      "Exact same thing as above, except using in contexts where we expect the
-  result to be passed to `transform-body`"
-      [body]
-      (if (= 1 (count body))
-          (first body)
-          (api/list-node
-           (list*
-            (api/token-node '<<do)
-            body))))
+(defn- let-node
+       "Build a (let [bindings...] body...) AST node."
+       [bindings body]
+       (api/list-node
+        (list*
+         (api/token-node 'let)
+         (api/vector-node bindings)
+         body)))
 
 (defn- inject-ramavars-map
        [ramavars body]
        (let [fval (:value (second (:children (first body))))]
             (if (rama-contains? '#{case> default>} fval)
                 (first body)
-                (wrap-do
-                 (concat
-                  (butlast body)
-                  (if (api/list-node? (last (:children (last body))))
-                      [(api/list-node
-                        (concat
-                         (butlast (:children (last body)))
-                         [(inject-ramavars-map ramavars
-                                               [(last (:children (last body)))])]))]
-                      [(api/list-node
-                        (concat
-                         (:children (last body))
-                         [(api/map-node
-                           (mapcat
-                            (fn [ramavar]
-                                [(api/token-node ramavar)
-                                 (api/token-node ramavar)])
-                            ramavars))]))]))))))
+                (wrap-form 'do
+                           (concat
+                            (butlast body)
+                            (if (api/list-node? (last (:children (last body))))
+                                [(api/list-node
+                                  (concat
+                                   (butlast (:children (last body)))
+                                   [(inject-ramavars-map ramavars
+                                                         [(last (:children (last body)))])]))]
+                                [(api/list-node
+                                  (concat
+                                   (:children (last body))
+                                   [(api/map-node
+                                     (mapcat
+                                      (fn [ramavar]
+                                          [(api/token-node ramavar)
+                                           (api/token-node ramavar)])
+                                      ramavars))]))]))))))
 
 (defn eliminate-unchecked-branches
       "Remove expressions that shouldn't be taken into consideration when
@@ -463,7 +460,7 @@
                             marker-node        (api/list-node
                                                 (list (api/token-node 'case>) type-node))]
                            (err/maybe-subsource-case-arity (:children marker) metadata)
-                           [[marker-node] [(wrap-<<do (concat [marker] body))]]))
+                           [[marker-node] [(wrap-form '<<do (concat [marker] body))]]))
                   branches)}))
 
 (defmethod split-form '<<switch
@@ -487,7 +484,7 @@
                                                (api/token-node '=)
                                                (second children)
                                                (rest (:children marker))))))]
-                       [(wrap-<<do body)]])
+                       [(wrap-form '<<do body)]])
                   blocks)}))
 
 (defmethod split-form '<<cond
@@ -505,7 +502,7 @@
                              (if (rama= 'case> (:value (first (:children marker))))
                                  (err/maybe-case-arity marker m)
                                  (err/maybe-default-arity marker m))
-                             [[marker] [(wrap-<<do body)]])
+                             [[marker] [(wrap-form '<<do body)]])
                          blocks)}))
 
 (defmethod split-form '<<if
@@ -523,7 +520,7 @@
                             (second children)]
                  :branches
                  (if else-marker
-                     [[(wrap-<<do if-block)] [(wrap-<<do else-block)]]
+                     [[(wrap-form '<<do if-block)] [(wrap-form '<<do else-block)]]
                      [if-block])}))
 
 ;; NOTE: the following forms, like the ones above, are handled specially. They
@@ -592,18 +589,15 @@
         ;; java interop is happening from inside dataflow code (which it is, but
         ;; normally that's disallowed, so we want to allow it here)
                  linted-expr  (api/list-node (list* 'trampoline (:children expr)))
-                 new-node     (api/list-node
-                               (list*
-                                (api/token-node 'let)
-                                (api/vector-node
-                                 [(api/token-node '_)
-                                  (api/list-node
-                                   (list* (api/token-node 'pr) (map api/token-node old)))
-                                  new-bindings
-                                  (api/vector-node [])])
-                                (transform-body
-                                 (concat [use-ramavars] [linted-expr] following)
-                                 ramavars)))
+                 new-node     (let-node
+                               [(api/token-node '_)
+                                (api/list-node
+                                 (list* (api/token-node 'pr) (map api/token-node old)))
+                                new-bindings
+                                (api/vector-node [])]
+                               (transform-body
+                                (concat [use-ramavars] [linted-expr] following)
+                                ramavars))
                  metadata     (meta node)]
                 [(with-meta new-node metadata) nil]))
 
@@ -631,13 +625,10 @@
                                                          $$pstate
                                                          template))]
                          [(with-meta
-                           (api/list-node
-                            (list*
-                             (api/token-node 'let)
-                             (api/vector-node [(api/vector-node
-                                                (map api/token-node outvars))
-                                               (api/vector-node [])])
-                             (transform-body (cons fake-node following) ramavars)))
+                           (let-node
+                            [(api/vector-node (map api/token-node outvars))
+                             (api/vector-node [])]
+                            (transform-body (cons fake-node following) ramavars))
                            (meta node))
                           nil])
                     [node following])))
@@ -668,15 +659,12 @@
                   (list
                    (api/token-node 'fn)
                    (api/vector-node [])
-                   (api/list-node
-                    (list*
-                     (api/token-node 'let)
-                     (api/vector-node
-                      (mapcat
-                       #(vector (api/token-node %)
-                                (api/string-node (str %)))
-                       pstates))
-                     (transform-body (concat body [input]) ramavars)))))
+                   (let-node
+                    (mapcat
+                     #(vector (api/token-node %)
+                              (api/string-node (str %)))
+                     pstates)
+                    (transform-body (concat body [input]) ramavars))))
                  metadata         (meta node)]
                 [(with-meta new-node metadata) following]))
 
@@ -771,20 +759,13 @@
       (let [metadata         (meta node)
             [_loop-token decls & body] (:children node)
             [inputs outputs] (extract-emits (:children decls) ramavars)
+            ;; NOTE: it would be more semantic to turn this into a `loop`
+            ;; form, but then we'd get "loop without recur" warnings.
             new-node
-            (api/list-node
-             (list*
-              (api/token-node 'let)
-              (api/vector-node
-               [(api/vector-node outputs)
-                (api/list-node
-                 (list*
-              ;; NOTE: it would be more semantic to turn this into a `loop`
-              ;; form, but then we'd get "loop without recur" warnings.
-                  (api/token-node 'let)
-                  (api/vector-node inputs)
-                  (transform-body body ramavars)))])
-              (transform-body following ramavars)))]
+            (let-node
+             [(api/vector-node outputs)
+              (let-node inputs (transform-body body ramavars))]
+             (transform-body following ramavars))]
            [(with-meta new-node metadata) nil]))
 
 (defmethod handle-form 'loop<-
@@ -804,13 +785,11 @@
                 (if (rama-contains? ramavars depot-name)
                     [node following]
                     (let [metadata (meta node)
-                          new-node (api/list-node
-                                    (list*
-                                     (api/token-node 'let)
-                                     (api/vector-node [(api/token-node depot-name)
-                                                       (api/token-node nil)])
-                                     (transform-body (concat [node] following)
-                                                     (conj ramavars depot-name))))]
+                          new-node (let-node
+                                    [(api/token-node depot-name)
+                                     (api/token-node nil)]
+                                    (transform-body (concat [node] following)
+                                                    (conj ramavars depot-name)))]
                          [(with-meta new-node metadata) nil]))))
 
 ;; (<<with-substitutions [$$p (task-global "$$p")
@@ -830,21 +809,17 @@
                  binding-pairs (partition 2 (:children bindings))
                  bound-vars (into #{} (map (comp :value first) binding-pairs))
                  ramavars (set/union ramavars bound-vars)
-                 new-node (api/list-node
-                           (list*
-                            (api/token-node 'let)
-                            (api/vector-node (:children bindings))
-                            (transform-body body ramavars)))]
+                 new-node (let-node
+                           (:children bindings)
+                           (transform-body body ramavars))]
                 [(with-meta new-node metadata) following]))
 
 (defmethod handle-form 'anchor>
            [node following ramavars]
            (let [anchor-node (second (:children node))
-                 new-node    (api/list-node
-                              (list*
-                               (api/token-node 'let)
-                               (api/vector-node [anchor-node (api/token-node nil)])
-                               (transform-body following ramavars)))]
+                 new-node    (let-node
+                              [anchor-node (api/token-node nil)]
+                              (transform-body following ramavars))]
                 [(with-meta new-node (meta node)) nil]))
 
 (defmethod handle-form '<<do
@@ -922,44 +897,24 @@
                              (if (seq ramavars) ;; unified ramavars
                                  (let [follows (transform-body following ramavars)]
                                       [(with-meta
-                                        (api/list-node
-                                         (list*
-                                          (api/token-node 'let)
-                                          (api/vector-node
-                                           (concat
-                      ;; Stick the unified bindings up at the top of the `let`.
-                      ;; This doesn't really matter, but it's to handle the
-                      ;; specific case where there's a
-                      ;; `(default> :unify false)`
-                      ;; And the body of the branch ends up having the unified
-                      ;; vars injected into it. Having the unified vars
-                      ;; declared first will ensure this doesn't cause an
-                      ;; unresolved symbol error
-                                            (mapcat
-                                             (fn [ramavar]
-                                                 [(api/token-node ramavar)
-                          ;; this needs to use the map from above?
-                                                  (api/token-node 'nil)])
-                                             ramavars)
-                      ;; Then we'll insert the actual conditional as a part of
-                      ;; the let. Since the unified vars come before, this
-                      ;; could also just be in the body of the `let`, but it
-                      ;; doesn't really matter.
-                                            [(api/token-node '_)
-                                             (api/list-node
-                                              (into prefix
-                              ;; We want to inject these expressions with just
-                              ;; something that uses the unified vars to avoid
-                              ;; getting unused var warnings
-                              ;; NOTE: The best we can really do here is to
-                              ;; avoid giving false warnings - however, we also
-                              ;; can't really give real ones unless we wanted
-                              ;; to duplicate the tree of proceeding segments
-                              ;; and nest them under each branch, but that's
-                              ;; not really a viable solution
-                                                    (map #(inject-ramavars-map ramavars %)
-                                                         bodies)))]))
-                                          follows))
+                                        (let-node
+                                         (concat
+                      ;; Unified bindings at the top of the let to handle
+                      ;; (default> :unify false) branches that have unified
+                      ;; vars injected, preventing unresolved symbol errors
+                                          (mapcat
+                                           (fn [ramavar]
+                                               [(api/token-node ramavar)
+                                                (api/token-node 'nil)])
+                                           ramavars)
+                      ;; The conditional, inserted as a binding to _ so
+                      ;; unified vars get used (avoiding unused var warnings)
+                                          [(api/token-node '_)
+                                           (api/list-node
+                                            (into prefix
+                                                  (map #(inject-ramavars-map ramavars %)
+                                                       bodies)))])
+                                         follows)
                                         {::ramavars ramavars})
                                        nil])
                                  [(with-meta
@@ -1009,14 +964,11 @@
                                                             (api/token-node nil))
                                                           found-anchors)
                                      bind-expr    (with-meta
-                                                   (api/list-node
-                                                    (list*
-                                                     (api/token-node 'let)
-                                                     (api/vector-node
-                                                      (concat anchor-binds
-                                                              new-bindings
-                                                              rebindings))
-                                                     follows))
+                                                   (let-node
+                                                    (concat anchor-binds
+                                                            new-bindings
+                                                            rebindings)
+                                                    follows)
                                                    {::ramavars ramavars})
                     ;; Produces
                     ;; (do
@@ -1079,15 +1031,16 @@
               ramavars ramavars
               result   []]
              (if (seq body)
-                 (let [[r following] (transform-form (first body) (rest body) ramavars)]
+                 (let [[r following] (transform-form (first body) (rest body) ramavars)
+                       r-ramavars (::ramavars (meta r))]
                       (recur following
-                             (into ramavars (::ramavars (meta r)))
+                             (into ramavars r-ramavars)
                              (vary-meta (conj result r)
                                         update
                                         ::ramavars
                                         set/union
                                         (::ramavars (meta result))
-                                        (::ramavars (meta r)))))
+                                        r-ramavars)))
                  result))))
 
 (def module-declaration-forms
@@ -1134,17 +1087,13 @@
                      pobjects     (set/union pobjects (::pobjects (meta follows)))]
                     (err/maybe-missing-pobject-name name declare (meta form))
                     [(with-meta
-                      (api/list-node
-                       (list*
-                        (api/token-node 'let)
-                        (api/vector-node
-                         [name
-                          (api/list-node (list* declare on definition))])
-             ;; We want to add this extra "call" to pr here to avoid
-             ;; getting warnings that the pstate is unused when it's
-             ;; referenced in a defgenerator or something like that
-                        (api/list-node (list (api/token-node 'pr) name))
-                        follows))
+                      (let-node
+                       [name
+                        (api/list-node (list* declare on definition))]
+             ;; Extra pr call to avoid unused binding warnings when
+             ;; the pobject is only referenced inside a defgenerator
+                       (cons (api/list-node (list (api/token-node 'pr) name))
+                             follows))
                       {::pobjects pobjects})
                      nil])
 
@@ -1187,15 +1136,16 @@
              result   []]
             (if (seq body)
                 (let [[r following]
-                      (transform-module-form (first body) (rest body) pobjects)]
+                      (transform-module-form (first body) (rest body) pobjects)
+                      r-pobjects (::pobjects (meta r))]
                      (recur following
-                            (into pobjects (::pobjects (meta r)))
+                            (into pobjects r-pobjects)
                             (vary-meta (conj result r)
                                        update
                                        ::pobjects
                                        set/union
                                        (::pobjects (meta result))
-                                       (::pobjects (meta r)))))
+                                       r-pobjects)))
                 result)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
