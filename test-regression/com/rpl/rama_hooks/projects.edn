@@ -1,0 +1,15 @@
+[{:name "rama-clojure-starter"
+  :repo "https://github.com/redplanetlabs/rama-clojure-starter.git"
+  :sha "f2005b8e35fecab106312c1e1c26c887b5a49f2f"
+  :paths ["src"]
+  :findings-file "test-regression/com/rpl/rama_hooks/fixtures/rama_clojure_starter_findings.edn"}
+ {:name "rama-demo-gallery"
+  :repo "https://github.com/redplanetlabs/rama-demo-gallery.git"
+  :sha "4b04b78e3ac0e39c8ec77c62c1723d7c562db68b"
+  :paths ["src/main/clj"]
+  :findings-file "test-regression/com/rpl/rama_hooks/fixtures/rama_demo_gallery_findings.edn"}
+ {:name "rama-tpcc"
+  :repo "https://github.com/redplanetlabs/rama-tpcc.git"
+  :sha "575b14aee1de12a0ae115ae44285e7a2ed85b7ff"
+  :paths ["src/clj" "test"]
+  :findings-file "test-regression/com/rpl/rama_hooks/fixtures/rama_tpcc_findings.edn"}]

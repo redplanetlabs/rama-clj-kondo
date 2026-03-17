@@ -1,0 +1,57 @@
+{:min-bb-version "1.3.191"
+ :tasks
+ {test
+  {:doc "Run unit tests"
+   :task (shell "clojure -M:test")}
+
+  regression
+  {:doc "Run external-project lint regression tests"
+   :task (shell "clojure -M:test-regression")}
+
+  regression:update
+  {:doc "Update expected findings fixtures for regression tests"
+   :task (shell {:extra-env {"CLJ_KONDO_REGRESSION_UPDATE" "1"}}
+                "clojure -M:test-regression")}
+
+  snapshots:update
+  {:doc "Alias for regression:update"
+   :task (run 'regression:update)}
+
+  regression:targets
+  {:doc "List regression target repos and findings fixture paths"
+   :task (let [projects (-> "test-regression/com/rpl/rama_hooks/projects.edn"
+                            slurp
+                            clojure.edn/read-string)]
+              (doseq [{:keys [name repo sha findings-file]} projects]
+                     (println (str name "\n"
+                                   "  repo: " repo "\n"
+                                   "  sha: " sha "\n"
+                                   "  findings: " findings-file "\n"))))}
+
+  regression:findings
+  {:doc "Summarize tolerated findings count per regression target"
+   :task (let [projects (-> "test-regression/com/rpl/rama_hooks/projects.edn"
+                            slurp
+                            clojure.edn/read-string)]
+              (doseq [{:keys [name findings-file]} projects]
+                     (let [project-name name
+                           findings (-> findings-file slurp clojure.edn/read-string)
+                           levels (frequencies (map :level findings))]
+                          (println (str project-name ": "
+                                        (count findings)
+                                        " tolerated findings"
+                                        " ("
+                                        (clojure.string/join
+                                         ", "
+                                         (for [lvl [:error :warning :info]
+                                               :let [n (get levels lvl 0)]
+                                               :when (pos? n)]
+                                              (str (clojure.core/name lvl) "=" n)))
+                                        ")")))))}
+
+  check
+  {:doc "Run formatting check + unit tests + regression tests"
+   :task (do
+          (shell "clojure -M:cljfmt check")
+          (run 'test)
+          (run 'regression))}}}

@@ -109,3 +109,44 @@ This project includes scripts to install Git hooks for maintaining code quality:
 ```
 
 The pre-push hook will block pushes if clj-kondo finds any issues in the project. 
+
+### Regression lint tests on external projects
+
+Run external-project regression tests (separate from the unit test suite) with:
+
+``` sh
+clojure -M:test-regression
+```
+
+These tests clone pinned commits of external Rama projects into `test-regression/checkouts/`, lint them with this repo's hooks, and compare the findings to checked-in fixtures.
+
+Regression targets are declared in `test-regression/com/rpl/rama_hooks/projects.edn`.
+
+To update fixtures after intentional linting changes:
+
+``` sh
+CLJ_KONDO_REGRESSION_UPDATE=1 clojure -M:test-regression
+```
+
+### Babashka tasks
+
+For convenience, the same workflows are available via `bb`:
+
+``` sh
+bb test
+bb regression
+bb regression:update
+bb snapshots:update
+bb regression:targets
+bb regression:findings
+bb check
+```
+
+- `bb test` – run unit tests
+- `bb regression` – run external-project regression lint tests
+- `bb regression:update` – regenerate expected findings fixtures
+- `bb snapshots:update` – alias of `bb regression:update`
+- `bb regression:targets` – list each regression target repo/sha and its findings fixture file
+- `bb regression:findings` – print tolerated findings counts per target
+- `bb check` – run cljfmt check + unit tests + regression tests
+

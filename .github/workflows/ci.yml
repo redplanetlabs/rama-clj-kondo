@@ -51,11 +51,17 @@ jobs:
         continue-on-error: true
         run: clojure -M:test
 
+      - name: Run regression tests
+        id: regression-tests
+        continue-on-error: true
+        run: clojure -M:test-regression
+
       - name: Check results
-        if: steps.cljfmt.outcome == 'failure' || steps.clj-kondo.outcome == 'failure' || steps.tests.outcome == 'failure'
+        if: steps.cljfmt.outcome == 'failure' || steps.clj-kondo.outcome == 'failure' || steps.tests.outcome == 'failure' || steps.regression-tests.outcome == 'failure'
         run: |
           echo "One or more checks failed:"
           echo "  cljfmt: ${{ steps.cljfmt.outcome }}"
           echo "  clj-kondo: ${{ steps.clj-kondo.outcome }}"
           echo "  tests: ${{ steps.tests.outcome }}"
+          echo "  regression-tests: ${{ steps.regression-tests.outcome }}"
           exit 1
