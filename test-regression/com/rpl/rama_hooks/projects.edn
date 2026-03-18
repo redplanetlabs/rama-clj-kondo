@@ -9,7 +9,7 @@
   :paths ["src/main/clj"]
   :findings-file "test-regression/com/rpl/rama_hooks/fixtures/rama_demo_gallery_findings.edn"}
  {:name "rama-tpcc"
-  :repo "/Users/duncan/projects/rpl/rama-tpcc"
+  :repo "https://github.com/redplanetlabs/rama-tpcc.git"
   :sha "be7e3f2ba4ae6106a8587664b410fd7e5af65e78"
   :paths ["src/clj" "test"]
   :findings-file "test-regression/com/rpl/rama_hooks/fixtures/rama_tpcc_findings.edn"}]
