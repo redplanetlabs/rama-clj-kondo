@@ -1048,6 +1048,18 @@
      '#{declare-depot declare-tick-depot declare-object declare-pstate mirror-depot
         mirror-pstate mirror-query})
 
+(defn- wrap-with-topology-ref
+       "Wraps a transformed node in (do (pr topology) node) so the topology
+  argument appears used in the enclosing scope."
+       [topology-node transformed-node]
+       (with-meta
+        (api/list-node
+         (list (api/token-node 'do)
+               (api/list-node
+                (list (api/token-node 'pr) topology-node))
+               transformed-node))
+        (meta transformed-node)))
+
 (defn transform-module-form
       "Given a form, and all forms following it, transforms it such that the above
   `declare-xyz` forms will be rewritten as `let`s, with the following forms
@@ -1316,9 +1328,10 @@
   Delegates to the existing handle-form multimethod which converts the form
   into a Clojure `fn`."
       [{:keys [node]}]
-      (let [[new-node] (binding [*context* :dataflow]
+      (let [topology (second (:children node))
+            [new-node] (binding [*context* :dataflow]
                                 (handle-form node [] #{}))]
-           {:node (with-meta new-node (meta node))}))
+           {:node (wrap-with-topology-ref topology new-node)}))
 
 (defn sources-hook
       "Transforms a Rama `<<sources` when used outside a defmodule body.
@@ -1326,9 +1339,10 @@
   Delegates to transform-form which dispatches to the split-form
   multimethod, splitting source blocks into separate branches."
       [{:keys [node]}]
-      (let [[new-node] (binding [*context* :dataflow]
+      (let [topology (second (:children node))
+            [new-node] (binding [*context* :dataflow]
                                 (transform-form node [] #{}))]
-           {:node (with-meta new-node (meta node))}))
+           {:node (wrap-with-topology-ref topology new-node)}))
 
 (defn foreign-select-hook
       "Validates that lambda functions aren't used in foreign-select calls"

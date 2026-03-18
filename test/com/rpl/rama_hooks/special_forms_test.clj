@@ -103,30 +103,38 @@
 (deftest query-topology-hook-test
   ;; The query-topology-hook enables <<query-topology to be transformed
   ;; when used outside a defmodule body (e.g. inside a helper defn).
+  ;; It wraps the result in (do (pr topology) ...) to keep the topology arg in scope.
   (testing "query-topology-hook"
-           (testing "produces the same result as calling handle-form via transform-module-form"
-                    (let [input '(<<query-topology
-                                  x
-                                  "name"
-                                  [*a *b :> *ret]
-                                  (+ *a *b :> *ret))]
-                         (is (= (body->sexpr
-                                 (rama/transform-module-form (->sexpr input) nil #{}))
-                                (node->sexpr
-                                 (rama/query-topology-hook (sexpr->node input)))))))))
+           (testing "wraps transformation with topology reference"
+                    (is (= '(do (pr x)
+                                (fn name [*a *b]
+                                    (let [*ret (+ *a *b)]
+                                         [*ret])))
+                           (node->sexpr
+                            (rama/query-topology-hook
+                             (sexpr->node
+                              '(<<query-topology
+                                x
+                                "name"
+                                [*a *b :> *ret]
+                                (+ *a *b :> *ret))))))))))
 
 (deftest sources-hook-test
   ;; The sources-hook enables <<sources to be transformed
   ;; when used outside a defmodule body (e.g. inside a helper defn).
+  ;; It wraps the result in (do (pr topology) ...) to keep the topology arg in scope.
   (testing "sources-hook"
-           (testing "produces the same result as calling transform-form via transform-module-form"
-                    (let [input '(<<sources topo
-                                            (source> *depot :> [*k *v])
-                                            (println *k *v))]
-                         (is (= (body->sexpr
-                                 (rama/transform-module-form (->sexpr input) nil #{}))
-                                (node->sexpr
-                                 (rama/sources-hook (sexpr->node input)))))))))
+           (testing "wraps transformation with topology reference"
+                    (is (= '(do (pr topo)
+                                (fn [*depot]
+                                    (let [[*k *v] (source> *depot)]
+                                         (println *k *v))))
+                           (node->sexpr
+                            (rama/sources-hook
+                             (sexpr->node
+                              '(<<sources topo
+                                          (source> *depot :> [*k *v])
+                                          (println *k *v))))))))))
 
 (deftest batch<--test
   (is

@@ -67,12 +67,6 @@
   :type :unresolved-symbol,
   :message "Unresolved symbol: *new-result"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 633,
-  :col 24,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding topologies"}
- {:filename "src/clj/rpl/tpcc.clj",
   :row 641,
   :col 61,
   :level :error,
