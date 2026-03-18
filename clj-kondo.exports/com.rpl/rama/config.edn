@@ -77,6 +77,8 @@
              foreign-invoke-query-async open-cluster-manager
              open-cluster-manager-internal get-module-status
              completable-future> ack-return>
+             set-launch-module-dynamic-option! declare-pstate*
+             this-module-pobject-task-global
 
              ;; com.rpl.rama.path
              AFTER-ELEM ALL ATOM BEFORE-ELEM before-index BEGINNING collect
@@ -93,6 +95,7 @@
              select-first select-one select-one! selected-any? selected?
              set-elem setval sorted-map-range sorted-map-range-from
              sorted-map-range-to sorted-set-range sorted-set-range-from
+             sorted-set-range-from-start
              sorted-set-range-to srange srange-dynamic submap subselect subset
              STAY STOP term termval transform transformed traverse traverse-all
              VAL view with-fresh-collected]}}}

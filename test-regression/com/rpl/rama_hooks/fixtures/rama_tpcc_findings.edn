@@ -49,12 +49,6 @@
   :type :unused-binding,
   :message "unused binding *final-total"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 586,
-  :col 53,
-  :level :error,
-  :type :unresolved-symbol,
-  :message "Unresolved symbol: sorted-set-range-from-start"}
- {:filename "src/clj/rpl/tpcc.clj",
   :row 588,
   :col 31,
   :level :warning,
@@ -121,18 +115,6 @@
   :type :unresolved-symbol,
   :message "Unresolved symbol: *cleanup-tick"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 695,
-  :col 4,
-  :level :error,
-  :type :unresolved-symbol,
-  :message "Unresolved symbol: set-launch-module-dynamic-option!"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 698,
-  :col 6,
-  :level :error,
-  :type :unresolved-symbol,
-  :message "Unresolved symbol: declare-pstate*"}
- {:filename "src/clj/rpl/tpcc.clj",
   :row 721,
   :col 26,
   :level :warning,
@@ -180,12 +162,6 @@
   :level :warning,
   :type :redundant-let,
   :message "Redundant let expression."}
- {:filename "src/clj/rpl/tpcc/pobjects.clj",
-  :row 150,
-  :col 41,
-  :level :error,
-  :type :unresolved-symbol,
-  :message "Unresolved symbol: this-module-pobject-task-global"}
  {:filename "test/rpl/tpcc/tpcc_test.clj",
   :row 2,
   :col 4,
