@@ -37,7 +37,8 @@
   com.rpl.rama/segmacro            clojure.core/fn}
 
  :linters
- {:rama-syntax-error {:level :error}
+ {:rama-syntax-error         {:level :error}
+  :rama-unverifiable-pobject {:level :info}
   :unused-namespace  {:exclude [com.rpl.rama com.rpl.rama.path]}
   :refer-all         {:exclude [com.rpl.rama com.rpl.rama.path]}
   ;; clj-kondo doesn't support (:require [... :refer :all]) or (:use ...) forms

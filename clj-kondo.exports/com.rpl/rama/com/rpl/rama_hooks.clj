@@ -127,6 +127,41 @@
          (api/vector-node bindings)
          body)))
 
+(defn- collect-all-ramavars
+       "Recursively collect all ::ramavars from a node and its descendants."
+       [node]
+       (let [own (or (::ramavars (meta node)) #{})]
+            (if-let [children (and (not (api/token-node? node))
+                                   (not (api/keyword-node? node))
+                                   (not (api/string-node? node))
+                                   (:children node))]
+                    (reduce (fn [acc child] (into acc (collect-all-ramavars child)))
+                            own
+                            children)
+                    own)))
+
+(defn- wrap-unverifiable-pstates
+       "Detects $$-prefixed symbols in body that are not locally bound in the
+  transformed node. Wraps the node in let bindings for those symbols (to
+  suppress unresolved-symbol errors) and emits info-level diagnostics.
+
+  Only flags $$-prefixed symbols (pstates), not *-prefixed ramavars."
+       [transformed-node body-nodes form-node]
+       (let [all-pstates     (find-all-pstates body-nodes)
+             bound-vars      (collect-all-ramavars transformed-node)
+             unbound-pstates (set/difference all-pstates bound-vars)]
+            (if (seq unbound-pstates)
+                (do (doseq [ps unbound-pstates]
+                           (err/info-unverifiable-pobject! ps (meta form-node)))
+                    (with-meta
+                     (let-node
+                      (mapcat (fn [sym]
+                                  [(api/token-node sym) (api/token-node nil)])
+                              unbound-pstates)
+                      [transformed-node])
+                     (meta transformed-node)))
+                transformed-node)))
+
 (defn- inject-ramavars-map
        [ramavars body]
        (let [fval (:value (second (:children (first body))))]
@@ -1344,23 +1379,29 @@
       "Transforms a Rama `<<query-topology` when used outside a defmodule body.
 
   Delegates to the existing handle-form multimethod which converts the form
-  into a Clojure `fn`."
+  into a Clojure `fn`. Emits info diagnostics for $$-prefixed symbols that
+  cannot be verified as locally bound."
       [{:keys [node]}]
       (let [topology (second (:children node))
+            body     (drop 4 (:children node))
             [new-node] (binding [*context* :dataflow]
-                                (handle-form node [] #{}))]
+                                (handle-form node [] #{}))
+            new-node (wrap-unverifiable-pstates new-node body node)]
            {:node (wrap-with-topology-ref topology new-node)}))
 
 (defn sources-hook
       "Transforms a Rama `<<sources` when used outside a defmodule body.
 
   Delegates to transform-form which dispatches to the split-form
-  multimethod, splitting source blocks into separate branches."
+  multimethod, splitting source blocks into separate branches. Emits info
+  diagnostics for $$-prefixed symbols that cannot be verified as locally bound."
       [{:keys [node]}]
       (let [topology (second (:children node))
+            body     (drop 2 (:children node))
             [new-node] (binding [*context* :dataflow]
                                 (transform-form node [] #{}))]
-           {:node (wrap-with-topology-ref topology new-node)}))
+           {:node (wrap-with-topology-ref topology
+                                          (wrap-unverifiable-pstates new-node body node))}))
 
 (defn foreign-select-hook
       "Validates that lambda functions aren't used in foreign-select calls"
