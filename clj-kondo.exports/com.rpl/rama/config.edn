@@ -14,9 +14,13 @@
    com.rpl.rama/<<query-topology       com.rpl.rama-hooks/query-topology-hook
    com.rpl.rama/<<sources             com.rpl.rama-hooks/sources-hook
    com.rpl.rama/foreign-select        com.rpl.rama-hooks/foreign-select-hook
+   com.rpl.rama/declare-depot         com.rpl.rama-hooks/declare-depot-hook
+   com.rpl.rama/declare-tick-depot    com.rpl.rama-hooks/declare-tick-depot-hook
 
    <<query-topology      com.rpl.rama-hooks/query-topology-hook
    <<sources             com.rpl.rama-hooks/sources-hook
+   declare-depot         com.rpl.rama-hooks/declare-depot-hook
+   declare-tick-depot    com.rpl.rama-hooks/declare-tick-depot-hook
    defbasicblocksegmacro com.rpl.rama-hooks/defbasicblocksegmacro-hook
    defbasicsegmacro      com.rpl.rama-hooks/defsegmacro-hook
    deframaop             com.rpl.rama-hooks/deframaop-hook

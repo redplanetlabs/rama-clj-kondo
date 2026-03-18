@@ -81,3 +81,53 @@
                  "finding type should be :rama-unverifiable-pobject")
              (is (= ["Cannot verify that $$p is declared in this module's scope"]
                     (get-info-findings))))))
+
+(deftest depot-registry-sources-hook-test
+  ;; Tests that *-prefixed depot vars registered via declare-depot or
+  ;; declare-tick-depot emit info diagnostics when used in standalone <<sources.
+  ;; Unregistered *-prefixed vars should not produce info diagnostics.
+  (testing "sources-hook with known-depot-names registry"
+           (with-testing-context
+            "emits info diagnostic for depot var registered via declare-depot"
+             (reset! @#'rama/known-depot-names #{})
+             (rama/declare-depot-hook
+              (sexpr->node '(declare-depot setup *transaction-depot (hash-by :x))))
+             (rama/sources-hook
+              (sexpr->node
+               '(<<sources s
+                           (source> *transaction-depot :> *data)
+                           (println *data))))
+             (is (= 1 (count (get-info-findings)))
+                 "should emit exactly one info finding for the known depot var")
+             (is (= [:rama-unverifiable-pobject] (get-info-types))
+                 "finding type should be :rama-unverifiable-pobject")
+             (is (= ["Cannot verify that *transaction-depot is declared in this module's scope"]
+                    (get-info-findings))))
+
+           (with-testing-context
+            "emits info diagnostic for depot var registered via declare-tick-depot"
+             (reset! @#'rama/known-depot-names #{})
+             (rama/declare-tick-depot-hook
+              (sexpr->node '(declare-tick-depot setup *cleanup-tick 60000)))
+             (rama/sources-hook
+              (sexpr->node
+               '(<<sources s
+                           (source> *cleanup-tick :> *data)
+                           (println *data))))
+             (is (= 1 (count (get-info-findings)))
+                 "should emit exactly one info finding for the known depot var")
+             (is (= [:rama-unverifiable-pobject] (get-info-types))
+                 "finding type should be :rama-unverifiable-pobject")
+             (is (= ["Cannot verify that *cleanup-tick is declared in this module's scope"]
+                    (get-info-findings))))
+
+           (with-testing-context
+            "does not emit info diagnostic for *var not in depot registry"
+             (reset! @#'rama/known-depot-names #{})
+             (rama/sources-hook
+              (sexpr->node
+               '(<<sources s
+                           (source> *depot :> *data)
+                           (identity *unknown-var :> *result))))
+             (is (= [] (get-info-findings))
+                 "should emit no info findings for unregistered *-prefixed vars"))))

@@ -13,6 +13,15 @@
 ;;; Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def ^:private known-depot-names
+     "Registry of depot names seen in declare-depot/declare-tick-depot calls.
+  Used to distinguish depot vars from regular ramavars in standalone hooks.
+
+  Note: this relies on clj-kondo processing the file containing the depot
+  declaration before the file referencing it. Within a single file this is
+  guaranteed; across files it depends on clj-kondo's lint order."
+     (atom #{}))
+
 (defn flatten-all
       "clojure.core/flatten doesn't work on maps, so this one does."
       [x]
@@ -141,23 +150,28 @@
                     own)))
 
 (defn- wrap-unverifiable-pstates
-       "Detects $$-prefixed symbols in body that are not locally bound in the
-  transformed node. Wraps the node in let bindings for those symbols (to
-  suppress unresolved-symbol errors) and emits info-level diagnostics.
+       "Detects $$-prefixed symbols and known depot names in body that are not
+  locally bound in the transformed node. Wraps the node in let bindings for
+  those symbols (to suppress unresolved-symbol errors) and emits info-level
+  diagnostics.
 
-  Only flags $$-prefixed symbols (pstates), not *-prefixed ramavars."
+  Only flags $$-prefixed symbols (pstates) and *-prefixed symbols that appear
+  in the known-depot-names registry."
        [transformed-node body-nodes form-node]
-       (let [all-pstates     (find-all-pstates body-nodes)
-             bound-vars      (collect-all-ramavars transformed-node)
-             unbound-pstates (set/difference all-pstates bound-vars)]
-            (if (seq unbound-pstates)
-                (do (doseq [ps unbound-pstates]
-                           (err/info-unverifiable-pobject! ps (meta form-node)))
+       (let [all-pstates    (find-all-pstates body-nodes)
+             all-ramavars   (find-all-ramavars body-nodes)
+             known-depots   (set/intersection all-ramavars @known-depot-names)
+             all-candidates (set/union all-pstates known-depots)
+             bound-vars     (collect-all-ramavars transformed-node)
+             unbound        (set/difference all-candidates bound-vars)]
+            (if (seq unbound)
+                (do (doseq [sym unbound]
+                           (err/info-unverifiable-pobject! sym (meta form-node)))
                     (with-meta
                      (let-node
                       (mapcat (fn [sym]
                                   [(api/token-node sym) (api/token-node nil)])
-                              unbound-pstates)
+                              unbound)
                       [transformed-node])
                      (meta transformed-node)))
                 transformed-node)))
@@ -1402,6 +1416,33 @@
                                 (transform-form node [] #{}))]
            {:node (wrap-with-topology-ref topology
                                           (wrap-unverifiable-pstates new-node body node))}))
+
+(defn declare-depot-hook
+      "Records depot names from declare-depot calls for cross-function reference tracking.
+  Returns the node unchanged — the actual transformation happens in defmodule-hook."
+      [{:keys [node] :as input}]
+      (let [children  (:children node)
+        ;; declare-depot has form: (declare-depot setup *name ...)
+        ;; Third child is the depot name
+            name-node (nth children 2 nil)]
+           (when (and name-node
+                      (api/token-node? name-node)
+                      (symbol? (:value name-node)))
+                 (swap! known-depot-names conj (:value name-node))))
+      input)
+
+(defn declare-tick-depot-hook
+      "Records depot names from declare-tick-depot calls for cross-function reference tracking.
+  Returns the node unchanged — the actual transformation happens in defmodule-hook."
+      [{:keys [node] :as input}]
+      (let [children  (:children node)
+        ;; declare-tick-depot has form: (declare-tick-depot setup *name millis)
+            name-node (nth children 2 nil)]
+           (when (and name-node
+                      (api/token-node? name-node)
+                      (symbol? (:value name-node)))
+                 (swap! known-depot-names conj (:value name-node))))
+      input)
 
 (defn foreign-select-hook
       "Validates that lambda functions aren't used in foreign-select calls"
