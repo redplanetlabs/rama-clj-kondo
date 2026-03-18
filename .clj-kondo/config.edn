@@ -1,4 +1,5 @@
-{:config-paths ["../clj-kondo.exports/com.rpl/rama"]
+{:config-paths ["../clj-kondo.exports/com.rpl/rama"
+                "../clj-kondo.exports/com.rpl/rama-helpers"]
  :linters {:unresolved-var {:exclude [com.rpl.rama-hooks/illegal-forms
                                       com.rpl.rama-hooks/*context*
                                       com.rpl.rama-hooks/foreign-select-hook
