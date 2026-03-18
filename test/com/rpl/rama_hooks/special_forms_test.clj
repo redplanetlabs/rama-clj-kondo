@@ -142,6 +142,21 @@
                                           (source> *depot :> [*k *v])
                                           (println *k *v))))))))))
 
+(deftest <<batch-test
+  ;; <<batch is a transparent scope: bindings inside must be visible to following forms
+  (testing "<<batch"
+           (testing "propagates bindings to following forms"
+                    (is (= '(<<batch
+                             (filter> false)
+                             (let [$$items (materialize>)]
+                                  (use $$items)))
+                           (body->sexpr
+                            (transform-sexprs
+                             '(<<batch
+                               (filter> false)
+                               (materialize> :> $$items))
+                             '(use $$items))))))))
+
 (deftest batch<--test
   (is
    (=

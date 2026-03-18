@@ -669,6 +669,18 @@
                  metadata         (meta node)]
                 [(with-meta new-node metadata) following]))
 
+;; <<batch is a transparent scope for linting: bindings created inside
+;; (e.g. via materialize>) must be visible to following forms.
+(defmethod handle-form '<<batch
+           [node following ramavars]
+           (let [[<<batch-token & body] (:children node)
+                 transformed (transform-body (concat body following) ramavars)
+                 new-node    (api/list-node (cons <<batch-token transformed))]
+                [(with-meta new-node
+                            (merge (meta node)
+                                   {::ramavars (::ramavars (meta transformed))}))
+                 nil]))
+
 ;; (<<query-topology x
 ;;   "name"
 ;;   [*a *b *c :> *ret]
