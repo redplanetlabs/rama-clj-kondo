@@ -100,6 +100,21 @@
         (rama/transform-module-form nil #{})
         body->sexpr))))
 
+(deftest query-topology-hook-test
+  ;; The query-topology-hook enables <<query-topology to be transformed
+  ;; when used outside a defmodule body (e.g. inside a helper defn).
+  (testing "query-topology-hook"
+           (testing "produces the same result as calling handle-form via transform-module-form"
+                    (let [input '(<<query-topology
+                                  x
+                                  "name"
+                                  [*a *b :> *ret]
+                                  (+ *a *b :> *ret))]
+                         (is (= (body->sexpr
+                                 (rama/transform-module-form (->sexpr input) nil #{}))
+                                (node->sexpr
+                                 (rama/query-topology-hook (sexpr->node input)))))))))
+
 (deftest batch<--test
   (is
    (=

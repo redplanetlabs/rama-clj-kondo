@@ -1309,6 +1309,16 @@
            (err/maybe-missing-input-vector input m)
            {:node (with-meta new-node m)}))
 
+(defn query-topology-hook
+      "Transforms a Rama `<<query-topology` when used outside a defmodule body.
+
+  Delegates to the existing handle-form multimethod which converts the form
+  into a Clojure `fn`."
+      [{:keys [node]}]
+      (let [[new-node] (binding [*context* :dataflow]
+                                (handle-form node [] #{}))]
+           {:node (with-meta new-node (meta node))}))
+
 (defn foreign-select-hook
       "Validates that lambda functions aren't used in foreign-select calls"
       [{:keys [node] :as orig}]
