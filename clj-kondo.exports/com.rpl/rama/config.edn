@@ -12,9 +12,11 @@
    com.rpl.rama/defmodule             com.rpl.rama-hooks/defmodule-hook
    com.rpl.rama/module                com.rpl.rama-hooks/module-hook
    com.rpl.rama/<<query-topology       com.rpl.rama-hooks/query-topology-hook
+   com.rpl.rama/<<sources             com.rpl.rama-hooks/sources-hook
    com.rpl.rama/foreign-select        com.rpl.rama-hooks/foreign-select-hook
 
    <<query-topology      com.rpl.rama-hooks/query-topology-hook
+   <<sources             com.rpl.rama-hooks/sources-hook
    defbasicblocksegmacro com.rpl.rama-hooks/defbasicblocksegmacro-hook
    defbasicsegmacro      com.rpl.rama-hooks/defsegmacro-hook
    deframaop             com.rpl.rama-hooks/deframaop-hook

@@ -1319,6 +1319,16 @@
                                 (handle-form node [] #{}))]
            {:node (with-meta new-node (meta node))}))
 
+(defn sources-hook
+      "Transforms a Rama `<<sources` when used outside a defmodule body.
+
+  Delegates to transform-form which dispatches to the split-form
+  multimethod, splitting source blocks into separate branches."
+      [{:keys [node]}]
+      (let [[new-node] (binding [*context* :dataflow]
+                                (transform-form node [] #{}))]
+           {:node (with-meta new-node (meta node))}))
+
 (defn foreign-select-hook
       "Validates that lambda functions aren't used in foreign-select calls"
       [{:keys [node] :as orig}]

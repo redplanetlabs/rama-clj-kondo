@@ -115,6 +115,19 @@
                                 (node->sexpr
                                  (rama/query-topology-hook (sexpr->node input)))))))))
 
+(deftest sources-hook-test
+  ;; The sources-hook enables <<sources to be transformed
+  ;; when used outside a defmodule body (e.g. inside a helper defn).
+  (testing "sources-hook"
+           (testing "produces the same result as calling transform-form via transform-module-form"
+                    (let [input '(<<sources topo
+                                            (source> *depot :> [*k *v])
+                                            (println *k *v))]
+                         (is (= (body->sexpr
+                                 (rama/transform-module-form (->sexpr input) nil #{}))
+                                (node->sexpr
+                                 (rama/sources-hook (sexpr->node input)))))))))
+
 (deftest batch<--test
   (is
    (=
