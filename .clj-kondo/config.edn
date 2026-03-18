@@ -1,4 +1,5 @@
-{:linters {:unresolved-var {:exclude [com.rpl.rama-hooks/illegal-forms
+{:config-paths ["../clj-kondo.exports/com.rpl/rama"]
+ :linters {:unresolved-var {:exclude [com.rpl.rama-hooks/illegal-forms
                                       com.rpl.rama-hooks/*context*
                                       com.rpl.rama-hooks/foreign-select-hook
                                       com.rpl.errors/syntax-error-keyword-fn-in-dataflow
