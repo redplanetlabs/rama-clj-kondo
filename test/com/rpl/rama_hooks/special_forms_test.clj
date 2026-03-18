@@ -24,12 +24,14 @@
 (deftest <<query-topology-test
   (is
    (=
-    '(fn
-      name
-      [*a *b *c]
-      (let
-       [*ret (+ *b *c)]
-       [*ret]))
+    '(do
+      (pr x)
+      (fn
+       name
+       [*a *b *c]
+       (let
+        [*ret (+ *b *c)]
+        [*ret])))
     (body->sexpr
      (rama/transform-module-form
       (->sexpr
@@ -43,12 +45,14 @@
 
   (is
    (=
-    '(fn
-      name
-      []
-      (let
-       [*ret (identity :x)]
-       [*ret]))
+    '(do
+      (pr x)
+      (fn
+       name
+       []
+       (let
+        [*ret (identity :x)]
+        [*ret])))
     (body->sexpr
      (rama/transform-module-form
       (->sexpr
@@ -63,23 +67,25 @@
 
   (is
    (=
-    '(fn
-      name
-      [*url *start-bucket *end-bucket]
-      (|hash *url)
-      (let
-       [[*granularity *gstart *gend]
-        (explode (query-granularities :m *start-bucket *end-bucket))]
+    '(do
+      (pr topologies)
+      (fn
+       name
+       [*url *start-bucket *end-bucket]
+       (|hash *url)
        (let
-        [*bucket-stat
-         (local-select>
-          [(keypath *url *granularity)
-           (sorted-map-range *gstart *gend) MAP-VALS]
-          $$window-stats)]
-        (|origin)
+        [[*granularity *gstart *gend]
+         (explode (query-granularities :m *start-bucket *end-bucket))]
         (let
-         [*stats (+combine-measurements *bucket-stat)]
-         [*stats]))))
+         [*bucket-stat
+          (local-select>
+           [(keypath *url *granularity)
+            (sorted-map-range *gstart *gend) MAP-VALS]
+           $$window-stats)]
+         (|origin)
+         (let
+          [*stats (+combine-measurements *bucket-stat)]
+          [*stats])))))
     (-> '(<<query-topology
           topologies
           "name"
@@ -99,6 +105,57 @@
         ->sexpr
         (rama/transform-module-form nil #{})
         body->sexpr))))
+
+(deftest query-topology-hook-test
+  ;; The query-topology-hook enables <<query-topology to be transformed
+  ;; when used outside a defmodule body (e.g. inside a helper defn).
+  ;; It wraps the result in (do (pr topology) ...) to keep the topology arg in scope.
+  (testing "query-topology-hook"
+           (testing "wraps transformation with topology reference"
+                    (is (= '(do (pr x)
+                                (fn name [*a *b]
+                                    (let [*ret (+ *a *b)]
+                                         [*ret])))
+                           (node->sexpr
+                            (rama/query-topology-hook
+                             (sexpr->node
+                              '(<<query-topology
+                                x
+                                "name"
+                                [*a *b :> *ret]
+                                (+ *a *b :> *ret))))))))))
+
+(deftest sources-hook-test
+  ;; The sources-hook enables <<sources to be transformed
+  ;; when used outside a defmodule body (e.g. inside a helper defn).
+  ;; It wraps the result in (do (pr topology) ...) to keep the topology arg in scope.
+  (testing "sources-hook"
+           (testing "wraps transformation with topology reference"
+                    (is (= '(do (pr topo)
+                                (fn [*depot]
+                                    (let [[*k *v] (source> *depot)]
+                                         (println *k *v))))
+                           (node->sexpr
+                            (rama/sources-hook
+                             (sexpr->node
+                              '(<<sources topo
+                                          (source> *depot :> [*k *v])
+                                          (println *k *v))))))))))
+
+(deftest <<batch-test
+  ;; <<batch is a transparent scope: bindings inside must be visible to following forms
+  (testing "<<batch"
+           (testing "propagates bindings to following forms"
+                    (is (= '(<<batch
+                             (filter> false)
+                             (let [$$items (materialize>)]
+                                  (use $$items)))
+                           (body->sexpr
+                            (transform-sexprs
+                             '(<<batch
+                               (filter> false)
+                               (materialize> :> $$items))
+                             '(use $$items))))))))
 
 (deftest batch<--test
   (is

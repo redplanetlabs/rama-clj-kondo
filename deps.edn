@@ -1,11 +1,14 @@
 {:deps    {clj-kondo/clj-kondo {:mvn/version "2023.10.20"}
            org.clojure/clojure {:mvn/version "1.11.1"}}
- :paths   ["clj-kondo.exports/com.rpl/rama" "test"]
+ :paths   ["clj-kondo.exports/com.rpl/rama"
+           "clj-kondo.exports/com.rpl/rama-helpers"
+           "test"]
  :aliases {:test {:extra-paths ["test"]
                   :extra-deps {lambdaisland/kaocha {:mvn/version "1.87.1366"}}
                   ;; run tests with clojure -M:test
                   :main-opts ["-m" "kaocha.runner"]}
            :test-regression {:replace-paths ["clj-kondo.exports/com.rpl/rama"
+                                             "clj-kondo.exports/com.rpl/rama-helpers"
                                              "test-regression"]
                              :extra-deps {lambdaisland/kaocha {:mvn/version "1.87.1366"}}
                              ;; run regression tests with clojure -M:test-regression

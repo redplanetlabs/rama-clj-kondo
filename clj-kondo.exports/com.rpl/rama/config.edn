@@ -11,8 +11,16 @@
    com.rpl.rama/batch<-               com.rpl.rama-hooks/batch<--hook
    com.rpl.rama/defmodule             com.rpl.rama-hooks/defmodule-hook
    com.rpl.rama/module                com.rpl.rama-hooks/module-hook
+   com.rpl.rama/<<query-topology       com.rpl.rama-hooks/query-topology-hook
+   com.rpl.rama/<<sources             com.rpl.rama-hooks/sources-hook
    com.rpl.rama/foreign-select        com.rpl.rama-hooks/foreign-select-hook
+   com.rpl.rama/declare-depot         com.rpl.rama-hooks/declare-depot-hook
+   com.rpl.rama/declare-tick-depot    com.rpl.rama-hooks/declare-tick-depot-hook
 
+   <<query-topology      com.rpl.rama-hooks/query-topology-hook
+   <<sources             com.rpl.rama-hooks/sources-hook
+   declare-depot         com.rpl.rama-hooks/declare-depot-hook
+   declare-tick-depot    com.rpl.rama-hooks/declare-tick-depot-hook
    defbasicblocksegmacro com.rpl.rama-hooks/defbasicblocksegmacro-hook
    defbasicsegmacro      com.rpl.rama-hooks/defsegmacro-hook
    deframaop             com.rpl.rama-hooks/deframaop-hook
@@ -33,7 +41,8 @@
   com.rpl.rama/segmacro            clojure.core/fn}
 
  :linters
- {:rama-syntax-error {:level :error}
+ {:rama-syntax-error         {:level :error}
+  :rama-unverifiable-pobject {:level :info}
   :unused-namespace  {:exclude [com.rpl.rama com.rpl.rama.path]}
   :refer-all         {:exclude [com.rpl.rama com.rpl.rama.path]}
   ;; clj-kondo doesn't support (:require [... :refer :all]) or (:use ...) forms
@@ -73,6 +82,8 @@
              foreign-invoke-query-async open-cluster-manager
              open-cluster-manager-internal get-module-status
              completable-future> ack-return>
+             set-launch-module-dynamic-option! declare-pstate*
+             this-module-pobject-task-global
 
              ;; com.rpl.rama.path
              AFTER-ELEM ALL ATOM BEFORE-ELEM before-index BEGINNING collect
@@ -89,6 +100,7 @@
              select-first select-one select-one! selected-any? selected?
              set-elem setval sorted-map-range sorted-map-range-from
              sorted-map-range-to sorted-set-range sorted-set-range-from
+             sorted-set-range-from-start
              sorted-set-range-to srange srange-dynamic submap subselect subset
              STAY STOP term termval transform transformed traverse traverse-all
              VAL view with-fresh-collected]}}}

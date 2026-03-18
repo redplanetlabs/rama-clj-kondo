@@ -13,6 +13,15 @@
 ;;; Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def ^:private known-depot-names
+     "Registry of depot names seen in declare-depot/declare-tick-depot calls.
+  Used to distinguish depot vars from regular ramavars in standalone hooks.
+
+  Note: this relies on clj-kondo processing the file containing the depot
+  declaration before the file referencing it. Within a single file this is
+  guaranteed; across files it depends on clj-kondo's lint order."
+     (atom #{}))
+
 (defn flatten-all
       "clojure.core/flatten doesn't work on maps, so this one does."
       [x]
@@ -127,10 +136,51 @@
          (api/vector-node bindings)
          body)))
 
+(defn- collect-all-ramavars
+       "Recursively collect all ::ramavars from a node and its descendants."
+       [node]
+       (let [own (or (::ramavars (meta node)) #{})]
+            (if-let [children (and (not (api/token-node? node))
+                                   (not (api/keyword-node? node))
+                                   (not (api/string-node? node))
+                                   (:children node))]
+                    (reduce (fn [acc child] (into acc (collect-all-ramavars child)))
+                            own
+                            children)
+                    own)))
+
+(defn- wrap-unverifiable-pstates
+       "Detects $$-prefixed symbols and known depot names in body that are not
+  locally bound in the transformed node. Wraps the node in let bindings for
+  those symbols (to suppress unresolved-symbol errors) and emits info-level
+  diagnostics.
+
+  Only flags $$-prefixed symbols (pstates) and *-prefixed symbols that appear
+  in the known-depot-names registry."
+       [transformed-node body-nodes form-node]
+       (let [all-pstates    (find-all-pstates body-nodes)
+             all-ramavars   (find-all-ramavars body-nodes)
+             known-depots   (set/intersection all-ramavars @known-depot-names)
+             all-candidates (set/union all-pstates known-depots)
+             bound-vars     (collect-all-ramavars transformed-node)
+             unbound        (set/difference all-candidates bound-vars)]
+            (if (seq unbound)
+                (do (doseq [sym unbound]
+                           (err/info-unverifiable-pobject! sym (meta form-node)))
+                    (with-meta
+                     (let-node
+                      (mapcat (fn [sym]
+                                  [(api/token-node sym) (api/token-node nil)])
+                              unbound)
+                      [transformed-node])
+                     (meta transformed-node)))
+                transformed-node)))
+
 (defn- inject-ramavars-map
        [ramavars body]
        (let [fval (:value (second (:children (first body))))]
-            (if (rama-contains? '#{case> default>} fval)
+            (if (or (::case-marker (meta (first body)))
+                    (rama-contains? '#{case> default>} fval))
                 (first body)
                 (wrap-form 'do
                            (concat
@@ -166,11 +216,12 @@
                 (and (rama= 'default> (:value (first (:children branch))))
                      (= '(:unify false) (rest (api/sexpr branch))))))
            (mapcat identity)
-       ;; Remove any `case>` and `default>` nodes
+       ;; Remove any `case>`, `default>`, and case-marker nodes
            (remove
             (fn [[[branch]]]
-                (rama-contains? '#{case> default>}
-                                (:value (first (:children branch))))))
+                (or (::case-marker (meta branch))
+                    (rama-contains? '#{case> default>}
+                                    (:value (first (:children branch)))))))
            (mapv (comp ::ramavars meta second))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -457,10 +508,9 @@
                  (mapcat
                   (fn [[[marker] body]]
                       (let [[_case> type-node] (:children marker)
-                            marker-node        (api/list-node
-                                                (list (api/token-node 'case>) type-node))]
+                            case-const (vary-meta type-node assoc ::case-marker true)]
                            (err/maybe-subsource-case-arity (:children marker) metadata)
-                           [[marker-node] [(wrap-form '<<do (concat [marker] body))]]))
+                           [[case-const] [(wrap-form '<<do (concat [marker] body))]]))
                   branches)}))
 
 (defmethod split-form '<<switch
@@ -668,6 +718,18 @@
                  metadata         (meta node)]
                 [(with-meta new-node metadata) following]))
 
+;; <<batch is a transparent scope for linting: bindings created inside
+;; (e.g. via materialize>) must be visible to following forms.
+(defmethod handle-form '<<batch
+           [node following ramavars]
+           (let [[<<batch-token & body] (:children node)
+                 transformed (transform-body (concat body following) ramavars)
+                 new-node    (api/list-node (cons <<batch-token transformed))]
+                [(with-meta new-node
+                            (merge (meta node)
+                                   {::ramavars (::ramavars (meta transformed))}))
+                 nil]))
+
 ;; (<<query-topology x
 ;;   "name"
 ;;   [*a *b *c :> *ret]
@@ -714,9 +776,10 @@
   Called by `transform-form`, NOT in the clj-kondo config because in that
   context we don't have access to the following nodes that are requires to
   embed in the resulting form to mimic the lexical scoping"
-      [node & [following]]
+      [node following ramavars]
       (let [metadata (meta node)
             [_ name input & body] (:children node)
+            follows (transform-body following ramavars)
             new-node
             (api/list-node
              (list*
@@ -727,11 +790,13 @@
                   name
                   input
                   (transform-body body)))])
-              (transform-body following)))]
+              follows))]
            (when-not (err/maybe-missing-def-name name metadata)
                      (err/maybe-invalid-ramaop-name name metadata)
                      (err/maybe-missing-input-vector input metadata))
-           [(with-meta new-node metadata) nil]))
+           [(with-meta new-node
+                       (merge metadata {::ramavars (::ramavars (meta follows))}))
+            nil]))
 
 (defmethod handle-form '<<ramaop
            [node following ramavars]
@@ -1047,6 +1112,18 @@
      '#{declare-depot declare-tick-depot declare-object declare-pstate mirror-depot
         mirror-pstate mirror-query})
 
+(defn- wrap-with-topology-ref
+       "Wraps a transformed node in (do (pr topology) node) so the topology
+  argument appears used in the enclosing scope."
+       [topology-node transformed-node]
+       (with-meta
+        (api/list-node
+         (list (api/token-node 'do)
+               (api/list-node
+                (list (api/token-node 'pr) topology-node))
+               transformed-node))
+        (meta transformed-node)))
+
 (defn transform-module-form
       "Given a form, and all forms following it, transforms it such that the above
   `declare-xyz` forms will be rewritten as `let`s, with the following forms
@@ -1098,15 +1175,18 @@
                      nil])
 
       ;; Anything inside `<<sources` or `<<query-topology` is data-flow code
-      ;; for topologies, so that should be parse/re-written as Rama code
+      ;; for topologies, so that should be parse/re-written as Rama code.
+      ;; Wrap with a topology reference so the topology arg appears used.
                (rama= '<<sources (:value (first children)))
-               (let [[out _following] (binding [*context* :dataflow]
+               (let [topology (second children)
+                     [out _following] (binding [*context* :dataflow]
                                                (transform-form form [] pobjects))]
-                    [out following])
+                    [(wrap-with-topology-ref topology out) following])
                (rama= '<<query-topology (:value (first children)))
-               (let [[out _following] (binding [*context* :dataflow]
+               (let [topology (second children)
+                     [out _following] (binding [*context* :dataflow]
                                                (handle-form form [] pobjects))]
-                    [out following])
+                    [(wrap-with-topology-ref topology out) following])
 
                :else
                [(let [body (transform-module-body children pobjects)]
@@ -1308,6 +1388,61 @@
            (err/maybe-missing-def-name name m)
            (err/maybe-missing-input-vector input m)
            {:node (with-meta new-node m)}))
+
+(defn query-topology-hook
+      "Transforms a Rama `<<query-topology` when used outside a defmodule body.
+
+  Delegates to the existing handle-form multimethod which converts the form
+  into a Clojure `fn`. Emits info diagnostics for $$-prefixed symbols that
+  cannot be verified as locally bound."
+      [{:keys [node]}]
+      (let [topology (second (:children node))
+            body     (drop 4 (:children node))
+            [new-node] (binding [*context* :dataflow]
+                                (handle-form node [] #{}))
+            new-node (wrap-unverifiable-pstates new-node body node)]
+           {:node (wrap-with-topology-ref topology new-node)}))
+
+(defn sources-hook
+      "Transforms a Rama `<<sources` when used outside a defmodule body.
+
+  Delegates to transform-form which dispatches to the split-form
+  multimethod, splitting source blocks into separate branches. Emits info
+  diagnostics for $$-prefixed symbols that cannot be verified as locally bound."
+      [{:keys [node]}]
+      (let [topology (second (:children node))
+            body     (drop 2 (:children node))
+            [new-node] (binding [*context* :dataflow]
+                                (transform-form node [] #{}))]
+           {:node (wrap-with-topology-ref topology
+                                          (wrap-unverifiable-pstates new-node body node))}))
+
+(defn declare-depot-hook
+      "Records depot names from declare-depot calls for cross-function reference tracking.
+  Returns the node unchanged — the actual transformation happens in defmodule-hook."
+      [{:keys [node] :as input}]
+      (let [children  (:children node)
+        ;; declare-depot has form: (declare-depot setup *name ...)
+        ;; Third child is the depot name
+            name-node (nth children 2 nil)]
+           (when (and name-node
+                      (api/token-node? name-node)
+                      (symbol? (:value name-node)))
+                 (swap! known-depot-names conj (:value name-node))))
+      input)
+
+(defn declare-tick-depot-hook
+      "Records depot names from declare-tick-depot calls for cross-function reference tracking.
+  Returns the node unchanged — the actual transformation happens in defmodule-hook."
+      [{:keys [node] :as input}]
+      (let [children  (:children node)
+        ;; declare-tick-depot has form: (declare-tick-depot setup *name millis)
+            name-node (nth children 2 nil)]
+           (when (and name-node
+                      (api/token-node? name-node)
+                      (symbol? (:value name-node)))
+                 (swap! known-depot-names conj (:value name-node))))
+      input)
 
 (defn foreign-select-hook
       "Validates that lambda functions aren't used in foreign-select calls"

@@ -90,6 +90,32 @@
                             (identity 2 :> *x))
                           '(+ *x 1 :> *y))))))
 
+           (testing "Unification across branches containing <<ramafn"
+                    ;; When a <<ramafn appears in a branch before the unified binding,
+                    ;; the ramavar metadata must propagate through the letfn so
+                    ;; unification still works.
+                    (is
+                     (=
+                      '(let
+                        [*x nil
+                         _
+                         (if
+                          (nil? *val)
+                          (let [*x (identity *result)] {*x *x})
+                          (do
+                           (letfn
+                            [(%helper [*v] (:> (inc *v)))]
+                            (let [*x (assoc *result 1 2)] {*x *x}))))]
+                        (use *x))
+                      (body->sexpr
+                       (transform-sexprs
+                        '(<<if (nil? *val)
+                               (identity *result :> *x)
+                               (else>)
+                               (<<ramafn %helper [*v] (:> (inc *v)))
+                               (assoc *result 1 2 :> *x))
+                        '(use *x))))))
+
            (testing "Nested conditional unification"
                     (is
                      (=
@@ -444,9 +470,9 @@
             (=
              '(case
                (type *data)
-               (case> A)
+               A
                (do (let [{:keys [*a]} (case> A)] (prn *a)))
-               (case> B)
+               B
                (do (let [{:keys [*b]} (case> B)] (prn *b))))
              (body->sexpr
               (transform-sexprs
@@ -465,9 +491,9 @@
                 _
                 (case
                  (type *data)
-                 (case> A)
+                 A
                  (do (let [{:keys [*a]} (case> A)] (prn *a {*a *a})))
-                 (case> B)
+                 B
                  (do (let [{:keys [*a]} (case> B)] (prn *a {*a *a}))))]
                (prn *a))
              (body->sexpr

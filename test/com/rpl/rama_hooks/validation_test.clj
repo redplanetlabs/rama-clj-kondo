@@ -118,19 +118,21 @@
                  (let [mb (microbatch-topology topologies "banking")]
                       (let [$$funds (declare-pstate mb {Long Long})]
                            (pr $$funds)
-                           (fn
-                            []
-                            (let [%microbatch (source> *transfer-depot)]
-                                 (let [{:keys [*success? *from-user-id *amt]} (%microbatch)]
-                                      (let [*map (identity {:a 1 :b 2})]
-                                           (let [*a (:a *map)]
-                                                (when *success?
-                                                      (letfn
-                                                       [(%deduct [*curr] (:> (- *curr *amt)))]
-                                                       (local-transform>
-                                                        [(keypath *from-user-id)
-                                                         (term %deduct)]
-                                                        $$funds)))))))))))))
+                           (do
+                            (pr mb)
+                            (fn
+                             []
+                             (let [%microbatch (source> *transfer-depot)]
+                                  (let [{:keys [*success? *from-user-id *amt]} (%microbatch)]
+                                       (let [*map (identity {:a 1 :b 2})]
+                                            (let [*a (:a *map)]
+                                                 (when *success?
+                                                       (letfn
+                                                        [(%deduct [*curr] (:> (- *curr *amt)))]
+                                                        (local-transform>
+                                                         [(keypath *from-user-id)
+                                                          (term %deduct)]
+                                                         $$funds))))))))))))))
 
 (deftest bank-transfer-module-with-errors-test
   (with-testing-context
