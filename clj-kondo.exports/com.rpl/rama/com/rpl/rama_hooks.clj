@@ -130,7 +130,8 @@
 (defn- inject-ramavars-map
        [ramavars body]
        (let [fval (:value (second (:children (first body))))]
-            (if (rama-contains? '#{case> default>} fval)
+            (if (or (::case-marker (meta (first body)))
+                    (rama-contains? '#{case> default>} fval))
                 (first body)
                 (wrap-form 'do
                            (concat
@@ -166,11 +167,12 @@
                 (and (rama= 'default> (:value (first (:children branch))))
                      (= '(:unify false) (rest (api/sexpr branch))))))
            (mapcat identity)
-       ;; Remove any `case>` and `default>` nodes
+       ;; Remove any `case>`, `default>`, and case-marker nodes
            (remove
             (fn [[[branch]]]
-                (rama-contains? '#{case> default>}
-                                (:value (first (:children branch))))))
+                (or (::case-marker (meta branch))
+                    (rama-contains? '#{case> default>}
+                                    (:value (first (:children branch)))))))
            (mapv (comp ::ramavars meta second))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -457,10 +459,9 @@
                  (mapcat
                   (fn [[[marker] body]]
                       (let [[_case> type-node] (:children marker)
-                            marker-node        (api/list-node
-                                                (list (api/token-node 'case>) type-node))]
+                            case-const (vary-meta type-node assoc ::case-marker true)]
                            (err/maybe-subsource-case-arity (:children marker) metadata)
-                           [[marker-node] [(wrap-form '<<do (concat [marker] body))]]))
+                           [[case-const] [(wrap-form '<<do (concat [marker] body))]]))
                   branches)}))
 
 (defmethod split-form '<<switch

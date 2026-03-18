@@ -444,9 +444,9 @@
             (=
              '(case
                (type *data)
-               (case> A)
+               A
                (do (let [{:keys [*a]} (case> A)] (prn *a)))
-               (case> B)
+               B
                (do (let [{:keys [*b]} (case> B)] (prn *b))))
              (body->sexpr
               (transform-sexprs
@@ -465,9 +465,9 @@
                 _
                 (case
                  (type *data)
-                 (case> A)
+                 A
                  (do (let [{:keys [*a]} (case> A)] (prn *a {*a *a})))
-                 (case> B)
+                 B
                  (do (let [{:keys [*a]} (case> B)] (prn *a {*a *a}))))]
                (prn *a))
              (body->sexpr

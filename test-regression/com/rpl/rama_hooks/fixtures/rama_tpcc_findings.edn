@@ -163,18 +163,6 @@
   :type :unresolved-symbol,
   :message "Unresolved symbol: declare-pstate*"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 716,
-  :col 5,
-  :level :error,
-  :type :case-duplicate-test,
-  :message "Duplicate case test constant: case>"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 716,
-  :col 5,
-  :level :error,
-  :type :case-duplicate-test,
-  :message "Duplicate case test constant: trampoline"}
- {:filename "src/clj/rpl/tpcc.clj",
   :row 721,
   :col 26,
   :level :warning,
