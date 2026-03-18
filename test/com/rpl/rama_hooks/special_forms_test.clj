@@ -24,12 +24,14 @@
 (deftest <<query-topology-test
   (is
    (=
-    '(fn
-      name
-      [*a *b *c]
-      (let
-       [*ret (+ *b *c)]
-       [*ret]))
+    '(do
+      (pr x)
+      (fn
+       name
+       [*a *b *c]
+       (let
+        [*ret (+ *b *c)]
+        [*ret])))
     (body->sexpr
      (rama/transform-module-form
       (->sexpr
@@ -43,12 +45,14 @@
 
   (is
    (=
-    '(fn
-      name
-      []
-      (let
-       [*ret (identity :x)]
-       [*ret]))
+    '(do
+      (pr x)
+      (fn
+       name
+       []
+       (let
+        [*ret (identity :x)]
+        [*ret])))
     (body->sexpr
      (rama/transform-module-form
       (->sexpr
@@ -63,23 +67,25 @@
 
   (is
    (=
-    '(fn
-      name
-      [*url *start-bucket *end-bucket]
-      (|hash *url)
-      (let
-       [[*granularity *gstart *gend]
-        (explode (query-granularities :m *start-bucket *end-bucket))]
+    '(do
+      (pr topologies)
+      (fn
+       name
+       [*url *start-bucket *end-bucket]
+       (|hash *url)
        (let
-        [*bucket-stat
-         (local-select>
-          [(keypath *url *granularity)
-           (sorted-map-range *gstart *gend) MAP-VALS]
-          $$window-stats)]
-        (|origin)
+        [[*granularity *gstart *gend]
+         (explode (query-granularities :m *start-bucket *end-bucket))]
         (let
-         [*stats (+combine-measurements *bucket-stat)]
-         [*stats]))))
+         [*bucket-stat
+          (local-select>
+           [(keypath *url *granularity)
+            (sorted-map-range *gstart *gend) MAP-VALS]
+           $$window-stats)]
+         (|origin)
+         (let
+          [*stats (+combine-measurements *bucket-stat)]
+          [*stats])))))
     (-> '(<<query-topology
           topologies
           "name"

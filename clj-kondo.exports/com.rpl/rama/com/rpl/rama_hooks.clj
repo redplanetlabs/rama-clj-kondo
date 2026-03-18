@@ -1114,15 +1114,18 @@
                      nil])
 
       ;; Anything inside `<<sources` or `<<query-topology` is data-flow code
-      ;; for topologies, so that should be parse/re-written as Rama code
+      ;; for topologies, so that should be parse/re-written as Rama code.
+      ;; Wrap with a topology reference so the topology arg appears used.
                (rama= '<<sources (:value (first children)))
-               (let [[out _following] (binding [*context* :dataflow]
+               (let [topology (second children)
+                     [out _following] (binding [*context* :dataflow]
                                                (transform-form form [] pobjects))]
-                    [out following])
+                    [(wrap-with-topology-ref topology out) following])
                (rama= '<<query-topology (:value (first children)))
-               (let [[out _following] (binding [*context* :dataflow]
+               (let [topology (second children)
+                     [out _following] (binding [*context* :dataflow]
                                                (handle-form form [] pobjects))]
-                    [out following])
+                    [(wrap-with-topology-ref topology out) following])
 
                :else
                [(let [body (transform-module-body children pobjects)]

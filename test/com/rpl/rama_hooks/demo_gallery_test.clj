@@ -109,56 +109,58 @@
                         :success?     Boolean})
                       {:subindex? true})})]
              (pr $$incoming-transfers)
-             (fn
-              []
-              (let
-               [%microbatch (source> *transfer-depot)]
+             (do
+              (pr mb)
+              (fn
+               []
                (let
-                [{:keys [*transfer-id *from-user-id *to-user-id *amt]}
-                 (%microbatch)]
+                [%microbatch (source> *transfer-depot)]
                 (let
-                 [*funds
-                  (local-select>
-                   [(keypath *from-user-id) (nil->val 0)]
-                   $$funds)]
+                 [{:keys [*transfer-id *from-user-id *to-user-id *amt]}
+                  (%microbatch)]
                  (let
-                  [*success? (>= *funds *amt)]
-                  (when
-                   *success?
-                   (letfn
-                    [(%deduct [*curr] (:> (- *curr *amt)))]
-                    (local-transform>
-                     [(keypath *from-user-id)
-                      (term %deduct)]
-                     $$funds)))
+                  [*funds
+                   (local-select>
+                    [(keypath *from-user-id) (nil->val 0)]
+                    $$funds)]
+                  (let
+                   [*success? (>= *funds *amt)]
+                   (when
+                    *success?
+                    (letfn
+                     [(%deduct [*curr] (:> (- *curr *amt)))]
+                     (local-transform>
+                      [(keypath *from-user-id)
+                       (term %deduct)]
+                      $$funds)))
 
-                  (local-transform>
-                   [(keypath *from-user-id *transfer-id)
-                    (termval
-                     {:to-user-id *to-user-id
-                      :amt        *amt
-                      :success?   *success?})]
-                   $$outgoing-transfers)
-                  (|hash *to-user-id)
-                  (when
-                   *success?
-                   (+compound
-                    $$funds
-                    {*to-user-id (aggs/+sum *amt)}))
-                  (local-transform>
-                   [(keypath *to-user-id *transfer-id)
-                    (termval
-                     {:from-user-id *from-user-id
-                      :amt          *amt
-                      :success?     *success?})]
-                   $$incoming-transfers)))))
-              (let
-               [%microbatch (source> *deposit-depot)]
+                   (local-transform>
+                    [(keypath *from-user-id *transfer-id)
+                     (termval
+                      {:to-user-id *to-user-id
+                       :amt        *amt
+                       :success?   *success?})]
+                    $$outgoing-transfers)
+                   (|hash *to-user-id)
+                   (when
+                    *success?
+                    (+compound
+                     $$funds
+                     {*to-user-id (aggs/+sum *amt)}))
+                   (local-transform>
+                    [(keypath *to-user-id *transfer-id)
+                     (termval
+                      {:from-user-id *from-user-id
+                       :amt          *amt
+                       :success?     *success?})]
+                    $$incoming-transfers)))))
                (let
-                [{:keys [*user-id *amt]} (%microbatch)]
-                (+compound
-                 $$funds
-                 {*user-id (aggs/+sum *amt)}))))))))))))
+                [%microbatch (source> *deposit-depot)]
+                (let
+                 [{:keys [*user-id *amt]} (%microbatch)]
+                 (+compound
+                  $$funds
+                  {*user-id (aggs/+sum *amt)})))))))))))))
 
 (deftest demo-gallery-bank-transfer-module-test
   ;; Tests transformation of a bank transfer module with:
@@ -264,45 +266,47 @@
                       :height-inches Long})})]
             (pr $$profiles)
             (.declarePState id-gen s)
-            (fn
-             []
-             (let
-              [{:keys [*uuid *username *pwd-hash]}
-               (source> *registration-depot)]
+            (do
+             (pr s)
+             (fn
+              []
               (let
-               [{:as *curr-info *curr-uuid :uuid}
-                (local-select>
-                 (keypath *username)
-                 $$username->registration)]
-               (when
-                (or>
-                 (nil? *curr-info)
-                 (= *curr-uuid *uuid))
-                (let
-                 [_ (pr) [*user-id] []]
-                 (pr [*user-id])
-                 (.genId id-gen "*user-id")
-                 (local-transform>
-                  [(keypath *username)
-                   (multi-path
-                    [:user-id (termval *user-id)]
-                    [:uuid (termval *uuid)])]
-                  $$username->registration)
-                 (|hash *user-id)
-                 (local-transform>
-                  [(keypath *user-id)
-                   (multi-path
-                    [:username (termval *username)]
-                    [:pwd-hash (termval *pwd-hash)])]
-                  $$profiles)))))
-             (let
-              [{:keys [*user-id *edits]}
-               (source> *profile-edits-depot)]
+               [{:keys [*uuid *username *pwd-hash]}
+                (source> *registration-depot)]
+               (let
+                [{:as *curr-info *curr-uuid :uuid}
+                 (local-select>
+                  (keypath *username)
+                  $$username->registration)]
+                (when
+                 (or>
+                  (nil? *curr-info)
+                  (= *curr-uuid *uuid))
+                 (let
+                  [_ (pr) [*user-id] []]
+                  (pr [*user-id])
+                  (.genId id-gen "*user-id")
+                  (local-transform>
+                   [(keypath *username)
+                    (multi-path
+                     [:user-id (termval *user-id)]
+                     [:uuid (termval *uuid)])]
+                   $$username->registration)
+                  (|hash *user-id)
+                  (local-transform>
+                   [(keypath *user-id)
+                    (multi-path
+                     [:username (termval *username)]
+                     [:pwd-hash (termval *pwd-hash)])]
+                   $$profiles)))))
               (let
-               [{:keys [*field *value]} (explode *edits)]
-               (local-transform>
-                [(keypath *user-id *field) (termval *value)]
-                $$profiles)))))))))))
+               [{:keys [*user-id *edits]}
+                (source> *profile-edits-depot)]
+               (let
+                [{:keys [*field *value]} (explode *edits)]
+                (local-transform>
+                 [(keypath *user-id *field) (termval *value)]
+                 $$profiles))))))))))))
 
 (deftest demo-gallery-profile-module-test
   ;; Tests transformation of a user profile module with:
@@ -381,45 +385,49 @@
                WindowStats
                {:subindex? true})}})]
           (pr $$window-stats)
-          (fn
-           []
-           (let
-            [%microbatch (source> *render-latency-depot)]
+          (do
+           (pr mb)
+           (fn
+            []
             (let
-             [{:keys [*url *render-millis *timestamp-millis]} (%microbatch)]
+             [%microbatch (source> *render-latency-depot)]
              (let
-              [*single-stat (single-window-stat *render-millis)]
+              [{:keys [*url *render-millis *timestamp-millis]} (%microbatch)]
               (let
-               [[*granularity *bucket]
-                (emit-index-granularities *timestamp-millis)]
-               (+compound
-                $$window-stats
-                {*url
-                 {*granularity
-                  {*bucket (+combine-measurements
-                            *single-stat)}}}))))))
-          (fn
-           get-stats-for-minute-range
-           [*url *start-bucket *end-bucket]
-           (|hash *url)
-           (let
-            [[*granularity *gstart *gend]
-             (explode
-              (query-granularities
-               :m
-               *start-bucket
-               *end-bucket))]
+               [*single-stat (single-window-stat *render-millis)]
+               (let
+                [[*granularity *bucket]
+                 (emit-index-granularities *timestamp-millis)]
+                (+compound
+                 $$window-stats
+                 {*url
+                  {*granularity
+                   {*bucket (+combine-measurements
+                             *single-stat)}}})))))))
+          (do
+           (pr topologies)
+           (fn
+            get-stats-for-minute-range
+            [*url *start-bucket *end-bucket]
+            (|hash *url)
             (let
-             [*bucket-stat
-              (local-select>
-               [(keypath *url *granularity)
-                (sorted-map-range *gstart *gend)
-                MAP-VALS]
-               $$window-stats)]
-             (|origin)
+             [[*granularity *gstart *gend]
+              (explode
+               (query-granularities
+                :m
+                *start-bucket
+                *end-bucket))]
              (let
-              [*stats (+combine-measurements *bucket-stat)]
-              [*stats])))))))))
+              [*bucket-stat
+               (local-select>
+                [(keypath *url *granularity)
+                 (sorted-map-range *gstart *gend)
+                 MAP-VALS]
+                $$window-stats)]
+              (|origin)
+              (let
+               [*stats (+combine-measurements *bucket-stat)]
+               [*stats]))))))))))
 
 (deftest demo-gallery-time-seties-module-test
   ;; Tests transformation of a time series module with:
@@ -482,34 +490,36 @@
            [$$top-spending-users
             (declare-pstate mb java.util.List {:global? true})]
            (pr $$top-spending-users)
-           (fn
-            []
-            (let
-             [%microbatch (source> *purchase-depot)]
-             (<<batch
-              (let
-               [*x nil
-                _
-                (if
-                 true
-                 (let [*x (identity 1)] {*x *x})
-                 (let [*x (identity 2)] {*x *x}))]
-               (pr *x)
+           (do
+            (pr mb)
+            (fn
+             []
+             (let
+              [%microbatch (source> *purchase-depot)]
+              (<<batch
                (let
-                [[*ret] (let [*x [1 2 3]])]
+                [*x nil
+                 _
+                 (if
+                  true
+                  (let [*x (identity 1)] {*x *x})
+                  (let [*x (identity 2)] {*x *x}))]
+                (pr *x)
                 (let
-                 [[*user-id *total-spend-cents]
-                  (user-spend-subbatch %microbatch)]
+                 [[*ret] (let [*x [1 2 3]])]
                  (let
-                  [*tuple (vector *user-id *total-spend-cents)]
-                  (|global)
-                  (+top-monotonic
-                   [TOP-AMOUNT]
-                   $$top-spending-users
-                   *tuple
-                   :+options
-                   {:id-fn       first
-                    :sort-val-fn last}))))))))))))))
+                  [[*user-id *total-spend-cents]
+                   (user-spend-subbatch %microbatch)]
+                  (let
+                   [*tuple (vector *user-id *total-spend-cents)]
+                   (|global)
+                   (+top-monotonic
+                    [TOP-AMOUNT]
+                    $$top-spending-users
+                    *tuple
+                    :+options
+                    {:id-fn       first
+                     :sort-val-fn last})))))))))))))))
 
 (deftest demo-gallery-top-users-module-test
   ;; Tests transformation of a top users module with:

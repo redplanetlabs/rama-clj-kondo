@@ -133,14 +133,16 @@
                             (let
                              [$$p2 (declare-pstate s {Object Long})]
                              (pr $$p2)
-                             (fn
-                              []
-                              (let
-                               [[*k *v] (source> *depot)]
-                               (+compound $$p {*k (+vec-agg *v)}))
-                              (let
-                               [*key (source> *depot-2)]
-                               (+compound $$p {*key (+count)})))))))))
+                             (do
+                              (pr s)
+                              (fn
+                               []
+                               (let
+                                [[*k *v] (source> *depot)]
+                                (+compound $$p {*k (+vec-agg *v)}))
+                               (let
+                                [*key (source> *depot-2)]
+                                (+compound $$p {*key (+count)}))))))))))
                       (node->sexpr
                        (rama/defmodule-hook
                         (sexpr->node '(defmodule

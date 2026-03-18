@@ -96,12 +96,6 @@
   :level :warning,
   :type :unused-binding,
   :message "unused binding $$processed-items"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 755,
-  :col 9,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding topo"}
  {:filename "src/clj/rpl/tpcc/load_runner.clj",
   :row 12,
   :col 43,
