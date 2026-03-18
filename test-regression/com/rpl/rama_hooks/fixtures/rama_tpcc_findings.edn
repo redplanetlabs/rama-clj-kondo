@@ -49,24 +49,6 @@
   :type :unused-binding,
   :message "unused binding *final-total"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 588,
-  :col 31,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *new-result"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 611,
-  :col 48,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *new-result"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 612,
-  :col 35,
-  :level :error,
-  :type :unresolved-symbol,
-  :message "Unresolved symbol: *new-result"}
- {:filename "src/clj/rpl/tpcc.clj",
   :row 641,
   :col 61,
   :level :error,

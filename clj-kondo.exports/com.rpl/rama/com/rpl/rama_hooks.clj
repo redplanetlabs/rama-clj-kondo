@@ -715,9 +715,10 @@
   Called by `transform-form`, NOT in the clj-kondo config because in that
   context we don't have access to the following nodes that are requires to
   embed in the resulting form to mimic the lexical scoping"
-      [node & [following]]
+      [node following ramavars]
       (let [metadata (meta node)
             [_ name input & body] (:children node)
+            follows (transform-body following ramavars)
             new-node
             (api/list-node
              (list*
@@ -728,11 +729,13 @@
                   name
                   input
                   (transform-body body)))])
-              (transform-body following)))]
+              follows))]
            (when-not (err/maybe-missing-def-name name metadata)
                      (err/maybe-invalid-ramaop-name name metadata)
                      (err/maybe-missing-input-vector input metadata))
-           [(with-meta new-node metadata) nil]))
+           [(with-meta new-node
+                       (merge metadata {::ramavars (::ramavars (meta follows))}))
+            nil]))
 
 (defmethod handle-form '<<ramaop
            [node following ramavars]
