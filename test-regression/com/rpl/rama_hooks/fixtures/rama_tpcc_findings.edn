@@ -37,14 +37,14 @@
   :type :unused-binding,
   :message "unused binding *d-tax"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 398,
-  :col 16,
+  :row 400,
+  :col 47,
   :level :warning,
   :type :unused-binding,
   :message "unused binding *o-id"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 441,
-  :col 21,
+  :row 443,
+  :col 12,
   :level :warning,
   :type :unused-binding,
   :message "unused binding *final-total"}

@@ -1006,7 +1006,14 @@
                     ;; such, this call to `trampoline` is inserted to ensure
                     ;; that the editor is able to provide this functionality.
                                      expr         (cons (api/token-node 'trampoline) expr)
-                                     new-bindings (if rebinds
+                                     ;; Destructuring output (single vector/map node)
+                                     ;; must use the original node as the binding form,
+                                     ;; even when all vars are rebinds.
+                                     destructuring? (and (= 1 (count out))
+                                                         (let [o (first out)]
+                                                              (or (api/vector-node? o)
+                                                                  (api/map-node? o))))
+                                     new-bindings (if (and rebinds (not destructuring?))
                                                       (case (count new-bindings)
                                                             0 []
                                                             1 [(api/token-node (first new-bindings))
@@ -1018,12 +1025,14 @@
                                                            (first out)
                                                            (api/vector-node out))
                                                        (api/list-node expr)])
-                                     rebindings   (mapcat
-                                                   #(vector
-                                                     (api/token-node %)
-                                                     (api/list-node
-                                                      [(api/token-node 'identity) %]))
-                                                   rebinds)
+                                     rebindings   (if destructuring?
+                                                      []
+                                                      (mapcat
+                                                       #(vector
+                                                         (api/token-node %)
+                                                         (api/list-node
+                                                          [(api/token-node 'identity) %]))
+                                                       rebinds))
                                      anchor-binds (mapcat #(vector
                                                             %
                                                             (api/token-node nil))
@@ -1042,7 +1051,7 @@
                     ;;     ...follows))
                                      result
                                      (with-meta
-                                      (if rebinds
+                                      (if (and rebinds (not destructuring?))
                                           (api/list-node
                                            (list
                                             (api/token-node 'do)
