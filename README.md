@@ -29,7 +29,26 @@ Note that if your dependency on Rama is specified under a specific alias or
 profile, you need to make sure to include that in the `clojure` or `lein`
 command. Otherwise the Rama jar won't be on the classpath.
 
-## Roadmap 
+## Optional Linters
+
+### Unverifiable PState references (`:rama-unverifiable-pobject`)
+
+When `$$`-prefixed PState symbols or depot vars are used in standalone
+`<<query-topology` or `<<sources` forms (outside a `defmodule`), the linter
+cannot verify that they were declared in a module scope. This linter emits
+info-level diagnostics for such references.
+
+This linter is **disabled by default** because these references are typically
+valid — they refer to PStates or depots declared elsewhere in the module. To
+enable it, add the following to your project's `.clj-kondo/config.edn`:
+
+``` clojure
+{:linters {:rama-unverifiable-pobject {:level :info}}}
+```
+
+You can also set the level to `:warning` or `:error` if desired.
+
+## Roadmap
 
 There are a number of Rama features that are known to not lint correctly. 
 Since Rama segments get transformed into a graph, reorganizing the code to 

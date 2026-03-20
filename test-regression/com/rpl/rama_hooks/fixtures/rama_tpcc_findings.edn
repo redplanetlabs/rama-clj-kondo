@@ -49,48 +49,6 @@
   :type :unused-binding,
   :message "unused binding *final-total"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 635,
-  :col 3,
-  :level :info,
-  :type :rama-unverifiable-pobject,
-  :message
-  "Cannot verify that $$customer is declared in this module's scope"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 635,
-  :col 3,
-  :level :info,
-  :type :rama-unverifiable-pobject,
-  :message
-  "Cannot verify that $$customer-by-last is declared in this module's scope"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 635,
-  :col 3,
-  :level :info,
-  :type :rama-unverifiable-pobject,
-  :message
-  "Cannot verify that $$order is declared in this module's scope"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 667,
-  :col 3,
-  :level :info,
-  :type :rama-unverifiable-pobject,
-  :message
-  "Cannot verify that $$district is declared in this module's scope"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 667,
-  :col 3,
-  :level :info,
-  :type :rama-unverifiable-pobject,
-  :message
-  "Cannot verify that $$order is declared in this module's scope"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 667,
-  :col 3,
-  :level :info,
-  :type :rama-unverifiable-pobject,
-  :message
-  "Cannot verify that $$stock is declared in this module's scope"}
- {:filename "src/clj/rpl/tpcc.clj",
   :row 689,
   :col 24,
   :level :error,
@@ -102,20 +60,6 @@
   :level :error,
   :type :unresolved-symbol,
   :message "Unresolved symbol: *cleanup-tick"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 716,
-  :col 5,
-  :level :info,
-  :type :rama-unverifiable-pobject,
-  :message
-  "Cannot verify that *cleanup-tick is declared in this module's scope"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 716,
-  :col 5,
-  :level :info,
-  :type :rama-unverifiable-pobject,
-  :message
-  "Cannot verify that *transaction-depot is declared in this module's scope"}
  {:filename "src/clj/rpl/tpcc.clj",
   :row 716,
   :col 5,
