@@ -173,16 +173,14 @@
     '(fn
       []
       (let [$$user-total-spend "$$user-total-spend"]
-           (do (microbatch)
-               (let
-                [*purchase-cents (microbatch)
-                 *user-id (identity *user-id)]
-                (|hash *user-id)
-                (let [[*total-spend-cents] []]
-                     (pr $$user-total-spend
-                         {*user-id (do (+sum *purchase-cents)
-                                       (let [*total-spend-cents (identity *total-spend-cents)]))})
-                     [*user-id *total-spend-cents])))))
+           (let
+            [{:keys [*user-id *purchase-cents]} (microbatch)]
+            (|hash *user-id)
+            (let [[*total-spend-cents] []]
+                 (pr $$user-total-spend
+                     {*user-id (do (+sum *purchase-cents)
+                                   (let [*total-spend-cents (identity *total-spend-cents)]))})
+                 [*user-id *total-spend-cents]))))
 
     (node->sexpr
      (rama/batch<--hook

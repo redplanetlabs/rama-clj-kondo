@@ -106,6 +106,44 @@
                  '(hash-map :one 1 :two 2 :> {:keys [*one *two]})
                  '(pr *one))))))
 
+  (testing "Destructuring rebinds"
+           (testing "uses destructuring when all output vars are rebinds"
+                    (is
+                     (= '(let [*a (identity 1)]
+                              (let [*b (identity 2)]
+                                   (let [[*a *b] (identity *x)]
+                                        (println *a *b))))
+                        (body->sexpr
+                         (transform-sexprs
+                          '(identity 1 :> *a)
+                          '(identity 2 :> *b)
+                          '(identity *x :> [*a *b])
+                          '(println *a *b))))))
+
+           (testing "uses destructuring when output has mix of new and rebound vars"
+                    (is
+                     (= '(let [*a (identity 1)]
+                              (let [[*a *b *c] (identity *x)]
+                                   (println *a *b *c)))
+                        (body->sexpr
+                         (transform-sexprs
+                          '(identity 1 :> *a)
+                          '(identity *x :> [*a *b *c])
+                          '(println *a *b *c))))))
+
+           (testing "uses map destructuring when all output vars are rebinds"
+                    (is
+                     (= '(let [*one (identity 1)]
+                              (let [*two (identity 2)]
+                                   (let [{:keys [*one *two]} (hash-map :one 10 :two 20)]
+                                        (pr *one *two))))
+                        (body->sexpr
+                         (transform-sexprs
+                          '(identity 1 :> *one)
+                          '(identity 2 :> *two)
+                          '(hash-map :one 10 :two 20 :> {:keys [*one *two]})
+                          '(pr *one *two)))))))
+
   (testing "Multiple assignments"
            (is
             (=
