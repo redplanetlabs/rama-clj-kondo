@@ -809,7 +809,8 @@
                  new-node (with-meta
                            (api/list-node
                             (into [(api/token-node 'fn)
-                                   (api/token-node (symbol (api/sexpr name)))
+                                   (api/token-node (try (symbol (api/sexpr name))
+                                                        (catch Exception _ 'query-topology-fn)))
                                    (api/vector-node input)]
                                   (transform-body (concat body [ret-node]) ramavars)))
                            metadata)]

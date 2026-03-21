@@ -64,8 +64,19 @@
                                   {:args args :exit exit :out out :err err})))
             out))
 
+(defn- apply-config-overlay!
+       "Copy overlay config files into the project's .clj-kondo directory."
+       [config-dir overlay-dir]
+       (when overlay-dir
+         (doseq [f (file-seq (io/file overlay-dir))
+                 :when (.isFile f)]
+           (let [rel (.relativize (.toPath (io/file overlay-dir)) (.toPath f))
+                 target (io/file config-dir (str rel))]
+             (.mkdirs (.getParentFile target))
+             (io/copy f target)))))
+
 (defn- lint-project
-       [{:keys [paths local] :as project}]
+       [{:keys [paths local config-overlay exclude-types] :as project}]
        (let [project-dir (if local "." (ensure-checkout! project))
              config-dir (.getPath (if local
                                       (io/file "." ".clj-kondo")
@@ -76,6 +87,7 @@
                            "--lint" (System/getProperty "java.class.path")
                            "--copy-configs" "--skip-lint"
                            "--config-dir" config-dir)
+             _ (apply-config-overlay! config-dir config-overlay)
              lint-paths (if local
                             (mapv str paths)
                             (mapv #(str (io/file project-dir %)) paths))
@@ -87,6 +99,9 @@
                                  "--parallel"
                                  "--repro"))]
             (->> (:findings result)
+                 (remove (fn [finding]
+                             (and exclude-types
+                                  (contains? exclude-types (:type finding)))))
                  (map (fn [finding]
                           (-> (select-keys finding [:filename :row :col :level :type :message])
                               (update :filename #(relative-path project-dir %)))))
