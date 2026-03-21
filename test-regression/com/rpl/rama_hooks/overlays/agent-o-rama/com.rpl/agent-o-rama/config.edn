@@ -1,0 +1,8 @@
+;; TODO: move these hooks to the agent-o-rama repo
+{:hooks
+ {:analyze-call
+  {com.rpl.agent-o-rama.impl.types/defaorrecord
+   com.rpl.agent-o-rama.hooks/defaorrecord-hook
+
+   com.rpl.agent-o-rama.impl.metrics/defmetric
+   com.rpl.agent-o-rama.hooks/defmetric-hook}}}
