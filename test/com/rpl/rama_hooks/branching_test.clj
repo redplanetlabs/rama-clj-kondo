@@ -104,7 +104,7 @@
                           (let [*x (identity *result)] {*x *x})
                           (do
                            (letfn
-                            [(%helper [*v] (:> (inc *v)))]
+                            [(%helper [*v] (do (inc *v)))]
                             (let [*x (assoc *result 1 2)] {*x *x}))))]
                         (use *x))
                       (body->sexpr

@@ -183,7 +183,7 @@
                           (let [*a (:a *map)]
                                (when *success?
                                      (letfn
-                                      [(%deduct [*curr] (:> (- *curr *amt)))]
+                                      [(%deduct [*curr] (do (- *curr *amt)))]
                                       (local-transform>
                                        [(keypath *from-user-id)
                                         (term %deduct)]

@@ -1495,12 +1495,6 @@
   :type :unresolved-symbol,
   :message "Unresolved symbol: AnaNodeTarget?"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
-  :row 810,
-  :col 11,
-  :level :error,
-  :type :invalid-arity,
-  :message "keyword :> is called with 4 args but expects 1 or 2"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 832,
   :col 6,
   :level :warning,
@@ -1812,12 +1806,6 @@
   :level :warning,
   :type :unresolved-var,
   :message "Unresolved var: aor-types/HumanSourceImpl?"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/evaluators.clj",
-  :row 365,
-  :col 9,
-  :level :error,
-  :type :invalid-arity,
-  :message "keyword :> is called with 3 args but expects 1 or 2"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/evaluators.clj",
   :row 408,
   :col 26,
@@ -3287,17 +3275,11 @@
   :type :unused-binding,
   :message "unused binding agent-name"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 248,
-  :col 30,
-  :level :error,
-  :type :invalid-arity,
-  :message "keyword :> is called with 5 args but expects 1 or 2"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 254,
   :col 9,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/->valid-AgentExecutionContext"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 278,
   :col 28,
@@ -3347,41 +3329,17 @@
   :type :unresolved-var,
   :message "Unresolved var: "}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 372,
-  :col 34,
-  :level :error,
-  :type :invalid-arity,
-  :message "keyword :> is called with 5 args but expects 1 or 2"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 437,
-  :col 30,
-  :level :error,
-  :type :invalid-arity,
-  :message "keyword :> is called with 5 args but expects 1 or 2"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 475,
   :col 6,
   :level :warning,
   :type :unresolved-var,
   :message "Unresolved var: aor-types/->valid-AgentFailure"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 495,
-  :col 19,
-  :level :error,
-  :type :invalid-arity,
-  :message "keyword :> is called with 6 args but expects 1 or 2"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 513,
   :col 58,
   :level :warning,
   :type :unused-binding,
   :message "unused binding *invoke-id"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 573,
-  :col 14,
-  :level :error,
-  :type :invalid-arity,
-  :message "keyword :> is called with 5 args but expects 1 or 2"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 618,
   :col 5,
@@ -3426,22 +3384,10 @@
   :message "unused binding *retry-num"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 745,
-  :col 11,
-  :level :error,
-  :type :invalid-arity,
-  :message "keyword :> is called with 5 args but expects 1 or 2"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 745,
   :col 12,
   :level :warning,
   :type :unresolved-var,
   :message "Unresolved var: aor-types/->valid-RetryNodeComplete"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 780,
-  :col 1,
-  :level :error,
-  :type :invalid-arity,
-  :message "keyword :> is called with 5 args but expects 1 or 2"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 783,
   :col 12,
@@ -3551,8 +3497,8 @@
   :type :unresolved-symbol,
   :message "Unresolved symbol: sorted-map-range-from-start"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 1248,
-  :col 4,
+  :row 1250,
+  :col 6,
   :level :warning,
   :type :unused-binding,
   :message "unused binding *tuples"}

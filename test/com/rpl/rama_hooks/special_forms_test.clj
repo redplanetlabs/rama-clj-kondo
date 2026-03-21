@@ -17,7 +17,7 @@
 ;;; Covers: emit tokens, query topologies, batch/loop processing, ramaops, anchors, and aggregations.
 
 (deftest emit-test
-  (is (= '(:> nil)
+  (is (= '(do)
          (body->sexpr
           (transform-sexprs '(:>))))))
 
@@ -204,7 +204,7 @@
         [!res 0]
         (if
          (pos? !res)
-         (:> !res)
+         (do !res)
          (continue> (+ !res 1))))]
       (pr !ret))
     (body->sexpr
@@ -227,7 +227,7 @@
                  [*a *b]
                  (let
                   [*c (trampoline + *a *b)]
-                  (:> *c)))])
+                  (do *c)))])
              (api/sexpr
               (first
                (transform-sexprs
@@ -245,7 +245,7 @@
                  [*a *b]
                  (let
                   [*c (trampoline + *a *b)]
-                  (:> *c)))]
+                  (do *c)))]
                (let
                 [*sum (trampoline %f 1 2)]
                 (trampoline pr *sum)))
@@ -265,7 +265,7 @@
     '(letfn
       [(%deduct
         [*curr]
-        (:> (trampoline - *curr *amt)))]
+        (do (- *curr *amt)))]
       (trampoline
        local-transform>
        [(trampoline keypath *from-user-id) (trampoline term %deduct)]
