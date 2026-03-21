@@ -45,7 +45,8 @@
   com.rpl.rama/defblock            clojure.core/defn
   com.rpl.rama/defdepotpartitioner clojure.core/defn
   com.rpl.rama/generator           clojure.core/fn
-  com.rpl.rama/segmacro            clojure.core/fn}
+  com.rpl.rama/segmacro            clojure.core/fn
+  com.rpl.rama/ifexpr              clojure.core/if}
 
  :linters
  {:rama-syntax-error         {:level :error}
