@@ -1435,17 +1435,10 @@
   :message "unused binding *start-time-millis"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 479,
-  :col 7,
-  :level :error,
-  :type :invalid-arity,
-  :message
-  "com.rpl.agent-o-rama.impl.analytics/mk-cursor-map is called with 3 args but expects 1"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
-  :row 479,
   :col 44,
-  :level :error,
-  :type :unresolved-symbol,
-  :message "Unresolved symbol: *cursor-map"}
+  :level :warning,
+  :type :unused-binding,
+  :message "unused binding *cursor-map"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 504,
   :col 9,

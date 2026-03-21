@@ -1057,7 +1057,27 @@
                                        {::ramavars ramavars})
                                       following]))
 
-                            (let [[expr out new-bindings rebinds new-vars found-anchors]
+                            ;; For ifexpr, pre-transform branches so inner :> emits
+                            ;; are handled before extract-emits sees the outer :>.
+                            ;; (ifexpr test (op :> *x) val :> *out) becomes
+                            ;; (ifexpr test (trampoline (let [*x (op)] *x)) val :> *out)
+                            (let [children (if (and (api/list-node? f)
+                                                    (rama= 'ifexpr (:value (first children))))
+                                               (let [;; Find where the outer :> starts (if any)
+                                                     non-emit (take-while (complement emit-node?) (rest children))
+                                                     emit-tail (drop (count non-emit) (rest children))
+                                                     [test & branch-exprs] (seq non-emit)
+                                                     wrap (fn [expr]
+                                                              (let [body (transform-body [expr] ramavars)]
+                                                                   (api/list-node (list* (api/token-node 'trampoline) body))))]
+                                                    (into (into [(first children) test]
+                                                                (mapv wrap branch-exprs))
+                                                          emit-tail))
+                                               children)
+                                  f (if (not= children (:children f))
+                                        (with-meta (api/list-node children) (meta f))
+                                        f)
+                                  [expr out new-bindings rebinds new-vars found-anchors]
                                   (if (api/list-node? f)
                                       (extract-emits children ramavars)
                                       [f])]
