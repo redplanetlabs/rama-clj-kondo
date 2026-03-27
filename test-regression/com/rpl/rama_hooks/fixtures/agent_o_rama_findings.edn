@@ -558,6 +558,13 @@
   :type :unused-binding,
   :message "unused binding this"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/agent_node.clj",
+  :row 195,
+  :col 6,
+  :level :warning,
+  :type :missing-protocol-method,
+  :message
+  "Missing protocol method(s): agent-node-state, get-streaming-recorder, get-declared-objects, get-agent-invoke"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/agent_node.clj",
   :row 196,
   :col 34,
   :level :warning,
@@ -863,6 +870,13 @@
   :level :warning,
   :type :unused-binding,
   :message "unused binding this"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/agent_node.clj",
+  :row 327,
+  :col 6,
+  :level :warning,
+  :type :missing-protocol-method,
+  :message
+  "Missing protocol method(s): set-metadata-internal!, stream-internal, stream-specific-internal, stream-all-internal"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/agent_node.clj",
   :row 328,
   :col 43,
@@ -1270,7 +1284,8 @@
   :col 17,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message
+  "Unresolved var: aor-types/ACQUIRE-OBJECT-TIMEOUT-MILLIS-CONFIG"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/agent_node.clj",
   :row 1101,
   :col 36,
@@ -1392,18 +1407,6 @@
   :type :unused-binding,
   :message "unused binding this"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
-  :row 357,
-  :col 7,
-  :level :warning,
-  :type :not-empty?,
-  :message "use the idiom (seq x) rather than (not (empty? x))"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
-  :row 358,
-  :col 7,
-  :level :warning,
-  :type :not-empty?,
-  :message "use the idiom (seq x) rather than (not (empty? x))"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 362,
   :col 27,
   :level :warning,
@@ -1421,12 +1424,6 @@
   :level :warning,
   :type :unused-binding,
   :message "unused binding this"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
-  :row 433,
-  :col 13,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *name"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 435,
   :col 54,
@@ -1468,19 +1465,20 @@
   :col 7,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/->valid-RunInfoImpl"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 692,
   :col 5,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/->valid-ActionLog"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 729,
   :col 29,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message
+  "Unresolved var: aor-types/ANALYTICS-SCAN-AMOUNT-PER-TARGET-PER-TASK-CONFIG"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 755,
   :col 26,
@@ -1510,13 +1508,15 @@
   :col 32,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message
+  "Unresolved var: aor-types/MAX-LIMITED-ACTIONS-CONCURRENCY-CONFIG"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 1115,
   :col 32,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message
+  "Unresolved var: aor-types/ACTIONS-PROCESSING-ITERATION-TIME-MILLIS-CONFIG"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/analytics.clj",
   :row 1202,
   :col 11,
@@ -1541,18 +1541,6 @@
   :level :warning,
   :type :unresolved-var,
   :message "Unresolved var: h/VOLATILE"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/client.clj",
-  :row 110,
-  :col 30,
-  :level :warning,
-  :type :not-empty?,
-  :message "use the idiom (seq x) rather than (not (empty? x))"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/client.clj",
-  :row 113,
-  :col 30,
-  :level :warning,
-  :type :not-empty?,
-  :message "use the idiom (seq x) rather than (not (empty? x))"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/client.clj",
   :row 135,
   :col 12,
@@ -1583,12 +1571,6 @@
   :level :warning,
   :type :missing-else-branch,
   :message "Missing else branch."}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/client.clj",
-  :row 174,
-  :col 27,
-  :level :warning,
-  :type :not-empty?,
-  :message "use the idiom (seq x) rather than (not (empty? x))"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/client.clj",
   :row 193,
   :col 12,
@@ -1734,12 +1716,6 @@
   :type :unused-import,
   :message "Unused import JsonMetaSchema$Builder"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/datasets.clj",
-  :row 219,
-  :col 13,
-  :level :warning,
-  :type :not-empty?,
-  :message "use the idiom (seq x) rather than (not (empty? x))"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/datasets.clj",
   :row 343,
   :col 69,
   :level :warning,
@@ -1787,12 +1763,6 @@
   :level :warning,
   :type :unused-binding,
   :message "unused binding fetcher"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/evaluators.clj",
-  :row 304,
-  :col 13,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *name"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/evaluators.clj",
   :row 359,
   :col 10,
@@ -2147,12 +2117,6 @@
   :type :unresolved-var,
   :message "Unresolved var: aor-types/->valid-EvalSourceImpl"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/experiments.clj",
-  :row 501,
-  :col 39,
-  :level :warning,
-  :type :not-empty?,
-  :message "use the idiom (seq x) rather than (not (empty? x))"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/experiments.clj",
   :row 505,
   :col 12,
   :level :warning,
@@ -2255,23 +2219,11 @@
   :type :unresolved-var,
   :message "Unresolved var: aor-types/AgentCompleteImpl?"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/experiments.clj",
-  :row 908,
-  :col 18,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *dataset-id"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/experiments.clj",
-  :row 908,
-  :col 18,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *id"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/experiments.clj",
   :row 923,
   :col 7,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/->valid-AgentInitiate"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/feedback.clj",
   :row 5,
   :col 5,
@@ -2731,6 +2683,24 @@
   :type :unused-import,
   :message "Unused import NodeAggStart"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/pobjects.clj",
+  :row 115,
+  :col 3,
+  :level :info,
+  :type :redundant-str-call,
+  :message "Single argument to str already is a string"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/pobjects.clj",
+  :row 227,
+  :col 3,
+  :level :info,
+  :type :redundant-str-call,
+  :message "Single argument to str already is a string"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/pobjects.clj",
+  :row 242,
+  :col 3,
+  :level :info,
+  :type :redundant-str-call,
+  :message "Single argument to str already is a string"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/pobjects.clj",
   :row 431,
   :col 4,
   :level :error,
@@ -2803,12 +2773,6 @@
   :type :unresolved-var,
   :message "Unresolved var: aor-types/HumanSourceImpl?"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/queries.clj",
-  :row 529,
-  :col 22,
-  :level :warning,
-  :type :not-empty?,
-  :message "use the idiom (seq x) rather than (not (empty? x))"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/queries.clj",
   :row 605,
   :col 15,
   :level :warning,
@@ -2875,6 +2839,12 @@
   :type :unresolved-symbol,
   :message "Unresolved symbol: sorted-map-range-to-end"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/queries.clj",
+  :row 925,
+  :col 44,
+  :level :warning,
+  :type :unused-binding,
+  :message "unused binding *range-nav"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/queries.clj",
   :row 1033,
   :col 43,
   :level :warning,
@@ -2916,7 +2886,8 @@
   :col 26,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message
+  "Unresolved var: aor-types/STALL-CHECKER-THRESHOLD-MILLIS-CONFIG"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/retries.clj",
   :row 76,
   :col 32,
@@ -3230,7 +3201,7 @@
   :col 5,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/->valid-NodeOp"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 131,
   :col 10,
@@ -3242,7 +3213,7 @@
   :col 7,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/->valid-AggAckOp"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 133,
   :col 15,
@@ -3314,13 +3285,13 @@
   :col 18,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/->valid-AgentResult"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 356,
   :col 25,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/MAX-RETRIES-CONFIG"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 475,
   :col 6,
@@ -3386,37 +3357,37 @@
   :col 12,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/AgentInitiate?"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 789,
   :col 12,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/RetryAgentInvoke?"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 794,
   :col 12,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/ForkAgentInvoke?"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 800,
   :col 12,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/NodeFailure?"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 806,
   :col 12,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/NodeComplete?"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 811,
   :col 12,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/RetryNodeComplete?"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 820,
   :col 34,
@@ -3441,12 +3412,6 @@
   :level :warning,
   :type :missing-else-branch,
   :message "Missing else branch."}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 874,
-  :col 16,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *agent-id"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 885,
   :col 46,
@@ -3476,13 +3441,13 @@
   :col 31,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/->valid-AggInput"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 1203,
   :col 23,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: aor-types/MAX-TRACES-PER-TASK-CONFIG"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 1210,
   :col 24,
@@ -3527,10 +3492,22 @@
   :message "Unused import CompletableFuture"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/types.clj",
   :row 127,
+  :col 4,
+  :level :warning,
+  :type :unresolved-protocol-method,
+  :message "Unresolved protocol method: getTaskId"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/types.clj",
+  :row 127,
   :col 15,
   :level :warning,
   :type :unused-binding,
   :message "unused binding this"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/types.clj",
+  :row 128,
+  :col 4,
+  :level :warning,
+  :type :unresolved-protocol-method,
+  :message "Unresolved protocol method: getAgentInvokeId"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/types.clj",
   :row 128,
   :col 22,
@@ -3539,10 +3516,22 @@
   :message "unused binding this"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/types.clj",
   :row 135,
+  :col 4,
+  :level :warning,
+  :type :unresolved-protocol-method,
+  :message "Unresolved protocol method: getTaskId"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/types.clj",
+  :row 135,
   :col 15,
   :level :warning,
   :type :unused-binding,
   :message "unused binding this"}
+ {:filename "src/clj/com/rpl/agent_o_rama/impl/types.clj",
+  :row 136,
+  :col 4,
+  :level :warning,
+  :type :unresolved-protocol-method,
+  :message "Unresolved protocol method: getNodeInvokeId"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/types.clj",
   :row 136,
   :col 21,

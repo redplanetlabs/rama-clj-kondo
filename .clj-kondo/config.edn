@@ -1,7 +1,7 @@
-{:config-paths ["../clj-kondo.exports/com.rpl/rama"
-                "../clj-kondo.exports/com.rpl/rama-helpers"]
+{:config-paths ["../clj-kondo.exports/com.rpl/rama"]
  :linters {:unresolved-var {:exclude [com.rpl.rama-hooks/illegal-forms
                                       com.rpl.rama-hooks/*context*
+                                      com.rpl.rama-hooks/defrecord+-hook
                                       com.rpl.rama-hooks/foreign-select-hook
                                       com.rpl.rama-hooks/query-topology-hook
                                       com.rpl.rama-hooks/sources-hook
