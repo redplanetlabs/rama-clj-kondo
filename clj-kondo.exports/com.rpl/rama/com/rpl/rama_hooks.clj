@@ -1593,7 +1593,8 @@
 ;;; defrecord+ support
 
 (defn- strip-schema-annotations
-       "Removes `:- Type` pairs from a field vector's children."
+       "Removes `:- Type` pairs from a field vector's children.
+  [a :- S b :- S] => [a b]"
        [children]
        (loop [cs     children
               result []]
@@ -1607,7 +1608,8 @@
 
 (defn defrecord+-hook
       "Transforms `defrecord+` into a standard `defrecord`.
-  Strips schema annotations (`:- Type` pairs) from the field vector."
+  Strips schema annotations (`:- Type` pairs) from the field vector.
+  (defrecord+ Foo [a :- Schema b :- Schema]) => (defrecord Foo [a b])"
       [{:keys [node]}]
       (let [[_ record-name fields & body] (:children node)
             plain-fields (strip-schema-annotations (:children fields))
