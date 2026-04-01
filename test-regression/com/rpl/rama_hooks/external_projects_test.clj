@@ -57,15 +57,20 @@
        (some? (System/getenv "CLJ_KONDO_REGRESSION_UPDATE")))
 
 (defn- lint-project
-       [{:keys [paths] :as project}]
-       (let [project-dir (ensure-checkout! project)
-             config-dir (io/file project-dir ".clj-kondo")
-             _ (delete-tree! (io/file config-dir ".cache"))
+       [{:keys [paths local] :as project}]
+       (let [project-dir (if local "." (ensure-checkout! project))
+             config-dir (if local
+                            (io/file "." ".clj-kondo")
+                            (io/file project-dir ".clj-kondo"))
+             _ (when-not local
+                         (delete-tree! (io/file config-dir ".cache")))
              _ (clj-kondo/run! {:config-dir (.getPath config-dir)
                                 :copy-configs true
                                 :skip-lint true
                                 :lint [(System/getProperty "java.class.path")]})
-             lint-paths (mapv #(str (io/file project-dir %)) paths)
+             lint-paths (if local
+                            (mapv str paths)
+                            (mapv #(str (io/file project-dir %)) paths))
              findings (:findings (clj-kondo/run! {:config-dir (.getPath config-dir)
                                                   :lint lint-paths
                                                   :parallel true

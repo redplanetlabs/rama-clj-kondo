@@ -22,6 +22,15 @@
   guaranteed; across files it depends on clj-kondo's lint order."
      (atom #{}))
 
+(def ^:private known-pstate-names
+     "Registry of pstate names seen in declare-pstate calls.
+  Used to identify pstate vars in standalone hooks.
+
+  Note: this relies on clj-kondo processing the file containing the pstate
+  declaration before the file referencing it. Within a single file this is
+  guaranteed; across files it depends on clj-kondo's lint order."
+     (atom #{}))
+
 (defn flatten-all
       "clojure.core/flatten doesn't work on maps, so this one does."
       [x]
@@ -149,19 +158,69 @@
                             children)
                     own)))
 
-(defn- wrap-unverifiable-pstates
-       "Detects $$-prefixed symbols and known depot names in body that are not
-  locally bound in the transformed node. Wraps the node in let bindings for
-  those symbols (to suppress unresolved-symbol errors) and emits info-level
-  diagnostics.
+(defn- find-let-bound-symbols
+       "Recursively find all symbols that appear as let-binding names in node."
+       [node]
+       (if-let [children (and (not (api/token-node? node))
+                              (not (api/keyword-node? node))
+                              (not (api/string-node? node))
+                              (:children node))]
+               (let [is-let? (and (api/list-node? node)
+                                  (some-> (first children)
+                                          api/token-node?
+                                          (and (= 'let (:value (first children))))))
+                     bindings (when (and is-let? (>= (count children) 2))
+                                    (let [bvec (second children)]
+                                         (when (api/vector-node? bvec)
+                                               (->> (:children bvec)
+                                                    (partition 2)
+                                                    (map first)
+                                                    (keep #(when (api/token-node? %)
+                                                                 (:value %)))
+                                                    set))))]
+                    (reduce (fn [acc child]
+                                (into acc (find-let-bound-symbols child)))
+                            (or bindings #{})
+                            children))
+               #{}))
 
-  Only flags $$-prefixed symbols (pstates) and *-prefixed symbols that appear
-  in the known-depot-names registry."
+(defn- wrap-known-pobjects
+       "Wraps the node in let bindings for pobject symbols from `known-pobjects`
+  that are referenced in the body but not let-bound in the transformed node.
+  Unlike `wrap-unverifiable-pstates`, this does not emit diagnostics because
+  the symbols are known to be declared in the enclosing module."
+       [transformed-node body-nodes known-pobjects]
+       (let [all-pstates (find-all-pstates body-nodes)
+             all-ramavars (find-all-ramavars body-nodes)
+             referenced  (set/intersection
+                          (set/union all-pstates all-ramavars)
+                          known-pobjects)
+             bound       (find-let-bound-symbols transformed-node)
+             unbound     (set/difference referenced bound)]
+            (if (seq unbound)
+                (with-meta
+                 (let-node
+                  (mapcat (fn [sym]
+                              [(api/token-node sym) (api/token-node nil)])
+                          unbound)
+                  [transformed-node])
+                 (meta transformed-node))
+                transformed-node)))
+
+(defn- wrap-unverifiable-pstates
+       "Detects $$-prefixed symbols, known pstate names, and known depot names
+  in body that are not locally bound in the transformed node. Wraps the node
+  in let bindings for those symbols (to suppress unresolved-symbol errors) and
+  emits info-level diagnostics.
+
+  Flags $$-prefixed symbols (pstates), *-prefixed symbols that appear in the
+  known-depot-names registry, and symbols in the known-pstate-names registry."
        [transformed-node body-nodes form-node]
        (let [all-pstates    (find-all-pstates body-nodes)
              all-ramavars   (find-all-ramavars body-nodes)
              known-depots   (set/intersection all-ramavars @known-depot-names)
-             all-candidates (set/union all-pstates known-depots)
+             known-pstates  (set/intersection all-pstates @known-pstate-names)
+             all-candidates (set/union all-pstates known-depots known-pstates)
              bound-vars     (collect-all-ramavars transformed-node)
              unbound        (set/difference all-candidates bound-vars)]
             (if (seq unbound)
@@ -1148,12 +1207,17 @@
   (let [*depot (declare-depot s (hash-by identity))]
     (let [*depot-2 (declare-depot s (hash-by key))]
       ...))
-  "
-      [form following pobjects]
-      (if-let [children (and (not (api/token-node? form))
-                             (not (api/keyword-node? form))
-                             (:children form))]
-              (cond
+
+  `scoped-pobjects` tracks pobjects that are lexically in scope at the current
+  level (bound by declare-xyz let-nesting). `pobjects` tracks all known
+  pobjects in the module, including those declared in nested blocks."
+      ([form following pobjects]
+       (transform-module-form form following pobjects pobjects))
+      ([form following pobjects scoped-pobjects]
+       (if-let [children (and (not (api/token-node? form))
+                              (not (api/keyword-node? form))
+                              (:children form))]
+               (cond
       ;; These forms all contain the same rewrite rules:
       ;;   - the first argument is the `setup` or topology binding
       ;;   - the second argument is the actual pobject (depot, pstate, etc)
@@ -1164,51 +1228,63 @@
       ;; avoid unused bindings warnings that clj-kondo would usually provide if
       ;; the pobject wasn't directly referenced in that `module` scope.
       ;; Ex. if a pstate is only referenced inside a `defgenerator`
-               (rama-contains? module-declaration-forms
-                               (:value (first children)))
-               (let [[declare on name & definition] children
-                     pobject-name (:value name)
-                     pobjects     (conj pobjects pobject-name)
-                     follows      (transform-module-body following pobjects)
-                     pobjects     (set/union pobjects (::pobjects (meta follows)))]
-                    (err/maybe-missing-pobject-name name declare (meta form))
-                    [(with-meta
-                      (let-node
-                       [name
-                        (api/list-node (list* declare on definition))]
+                (rama-contains? module-declaration-forms
+                                (:value (first children)))
+                (let [[declare on name & definition] children
+                      pobject-name (:value name)
+                      pobjects        (conj pobjects pobject-name)
+                      scoped-pobjects (conj scoped-pobjects pobject-name)
+                      follows         (transform-module-body following pobjects
+                                                             scoped-pobjects)
+                      pobjects        (set/union pobjects
+                                                 (::pobjects (meta follows)))]
+                     (err/maybe-missing-pobject-name name declare (meta form))
+                     [(with-meta
+                       (let-node
+                        [name
+                         (api/list-node (list* declare on definition))]
              ;; Extra pr call to avoid unused binding warnings when
              ;; the pobject is only referenced inside a defgenerator
-                       (cons (api/list-node (list (api/token-node 'pr) name))
-                             follows))
-                      {::pobjects pobjects})
-                     nil])
+                        (cons (api/list-node (list (api/token-node 'pr) name))
+                              follows))
+                       {::pobjects pobjects})
+                      nil])
 
       ;; Anything inside `<<sources` or `<<query-topology` is data-flow code
       ;; for topologies, so that should be parse/re-written as Rama code.
       ;; Wrap with a topology reference so the topology arg appears used.
-               (rama= '<<sources (:value (first children)))
-               (let [topology (second children)
-                     [out _following] (binding [*context* :dataflow]
-                                               (transform-form form [] pobjects))]
-                    [(wrap-with-topology-ref topology out) following])
-               (rama= '<<query-topology (:value (first children)))
-               (let [topology (second children)
-                     [out _following] (binding [*context* :dataflow]
-                                               (handle-form form [] pobjects))]
-                    [(wrap-with-topology-ref topology out) following])
+      ;; wrap-known-pobjects injects let bindings for pobjects that are known
+      ;; in the module but not lexically in scope at this point.
+                (rama= '<<sources (:value (first children)))
+                (let [topology   (second children)
+                      body       (drop 2 children)
+                      unscoped   (set/difference pobjects scoped-pobjects)
+                      [out _following] (binding [*context* :dataflow]
+                                                (transform-form form [] pobjects))
+                      out (wrap-known-pobjects out body unscoped)]
+                     [(wrap-with-topology-ref topology out) following])
+                (rama= '<<query-topology (:value (first children)))
+                (let [topology   (second children)
+                      body       (drop 4 children)
+                      unscoped   (set/difference pobjects scoped-pobjects)
+                      [out _following] (binding [*context* :dataflow]
+                                                (handle-form form [] pobjects))
+                      out (wrap-known-pobjects out body unscoped)]
+                     [(wrap-with-topology-ref topology out) following])
 
-               :else
-               [(let [body (transform-module-body children pobjects)]
-                     (vary-meta
-                      (cond
-                       (api/vector-node? form) (api/vector-node body)
-                       (api/map-node? form) (api/list-node body)
-                       :else (api/list-node body))
-                      assoc
-                      ::pobjects
-                      (::pobjects (meta body))))
-                following])
-              [form following]))
+                :else
+                [(let [body (transform-module-body children pobjects
+                                                   scoped-pobjects)]
+                      (vary-meta
+                       (cond
+                        (api/vector-node? form) (api/vector-node body)
+                        (api/map-node? form) (api/list-node body)
+                        :else (api/list-node body))
+                       assoc
+                       ::pobjects
+                       (::pobjects (meta body))))
+                 following])
+               [form following])))
 
 (defn transform-module-body
       "The rules for rewriting a module definition are similar to that of dataflow
@@ -1219,23 +1295,32 @@
   Note: For reference, the `transform-module-form` works very similarly to
   `transform-form`, however the implementation is a little simpler, so might be
   easier to get familiar with it first."
-      [body pobjects]
-      (loop [body     body
-             pobjects pobjects
-             result   []]
-            (if (seq body)
-                (let [[r following]
-                      (transform-module-form (first body) (rest body) pobjects)
-                      r-pobjects (::pobjects (meta r))]
-                     (recur following
-                            (into pobjects r-pobjects)
-                            (vary-meta (conj result r)
-                                       update
-                                       ::pobjects
-                                       set/union
-                                       (::pobjects (meta result))
-                                       r-pobjects)))
-                result)))
+      ([body pobjects] (transform-module-body body pobjects pobjects))
+      ([body pobjects scoped-pobjects]
+       (loop [body             body
+              pobjects         pobjects
+              scoped-pobjects  scoped-pobjects
+              result           []]
+             (if (seq body)
+                 (let [[r following]
+                       (transform-module-form (first body) (rest body)
+                                              pobjects scoped-pobjects)
+                       r-pobjects (::pobjects (meta r))]
+                      (recur following
+                             (into pobjects r-pobjects)
+                             ;; Don't add r-pobjects to scoped-pobjects:
+                             ;; they come from nested blocks (`:else` branch)
+                             ;; and aren't lexically in scope at this level.
+                             ;; Direct declarations (declare-pstate etc.)
+                             ;; add to scoped-pobjects via transform-module-form.
+                             scoped-pobjects
+                             (vary-meta (conj result r)
+                                        update
+                                        ::pobjects
+                                        set/union
+                                        (::pobjects (meta result))
+                                        r-pobjects)))
+                 result))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Hooks
@@ -1451,6 +1536,19 @@
                       (api/token-node? name-node)
                       (symbol? (:value name-node)))
                  (swap! known-depot-names conj (:value name-node))))
+      input)
+
+(defn declare-pstate-hook
+      "Records pstate names from declare-pstate calls for cross-function reference tracking.
+  Returns the node unchanged — the actual transformation happens in defmodule-hook."
+      [{:keys [node] :as input}]
+      (let [children  (:children node)
+        ;; declare-pstate has form: (declare-pstate topology $$name ...)
+            name-node (nth children 2 nil)]
+           (when (and name-node
+                      (api/token-node? name-node)
+                      (symbol? (:value name-node)))
+                 (swap! known-pstate-names conj (:value name-node))))
       input)
 
 (defn foreign-select-hook
