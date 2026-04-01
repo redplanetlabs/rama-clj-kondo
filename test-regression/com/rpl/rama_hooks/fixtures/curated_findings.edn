@@ -1,7 +1,1 @@
-[{:filename
-  "test-regression/com/rpl/rama_hooks/sources/curated/bank_transfer.clj",
-  :row 6,
-  :col 1,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *amt"}]
+[]

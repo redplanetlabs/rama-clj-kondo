@@ -1018,7 +1018,8 @@
                                                (eliminate-unchecked-branches branches bodies))
                                               ramavars))]
 
-                             (if (seq ramavars) ;; unified ramavars
+                             (if (and (seq ramavars) ;; unified ramavars
+                                      (seq following)) ;; skip if nothing follows
                                  (let [follows (transform-body following ramavars)]
                                       [(with-meta
                                         (let-node

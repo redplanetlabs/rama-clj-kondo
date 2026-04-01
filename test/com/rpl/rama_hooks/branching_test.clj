@@ -203,17 +203,14 @@
                             (transform-sexprs
                              '(<<switch :x (case> :y) (one) (two) (case> :x) (three)))))))
 
-           (testing "Unification"
+           (testing "skips unification when no following code"
                     (is
                      (=
-                      '(let
-                        [*x nil
-                         _
-                         (cond
-                          (case> (= :x :y))
-                          (let [*x (identity 1)] {*x *x})
-                          (case> (= :x :x))
-                          (let [*x (identity 2)] {*x *x}))])
+                      '(cond
+                        (case> (= :x :y))
+                        (let [*x (identity 1)])
+                        (case> (= :x :x))
+                        (let [*x (identity 2)]))
                       (body->sexpr
                        (transform-sexprs
                         '(<<switch
@@ -277,21 +274,18 @@
                             (default>)
                             (three)))))))
 
-           (testing "Unification"
+           (testing "skips unification when no following code"
                     (is
                      (=
-                      '(let
-                        [*x nil
-                         _
-                         (cond
-                          (case> false)
-                          (do
-                           (pr 1)
-                           (let [*x (identity 1)] {*x *x}))
-                          (case> true)
-                          (do
-                           (pr 2)
-                           (let [*x (identity 2)] {*x *x})))])
+                      '(cond
+                        (case> false)
+                        (do
+                         (pr 1)
+                         (let [*x (identity 1)]))
+                        (case> true)
+                        (do
+                         (pr 2)
+                         (let [*x (identity 2)])))
                       (body->sexpr
                        (transform-sexprs
                         '(<<cond
