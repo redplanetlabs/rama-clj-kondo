@@ -809,7 +809,8 @@
                  new-node (with-meta
                            (api/list-node
                             (into [(api/token-node 'fn)
-                                   (api/token-node (symbol (api/sexpr name)))
+                                   (api/token-node (try (symbol (api/sexpr name))
+                                                        (catch Exception _ 'query-topology-fn)))
                                    (api/vector-node input)]
                                   (transform-body (concat body [ret-node]) ramavars)))
                            metadata)]
@@ -998,25 +999,33 @@
        (when (api/list-node? f)
              (let [out (validate-form (first (:children f)))]
                   out))
-       (if-let [children (and (not (api/token-node? f))
-                              (not (api/keyword-node? f))
-                              (:children f))]
-               (let [{:keys [prefix branches]} (split-form f children ramavars)]
-                    (if (seq branches)
-                        (let [bodies   (mapv #(transform-body % ramavars) branches)
-                              ramavars (when (and (> (count branches) 1)
-                                                  (not (rama-contains?
-                                                        '#{<<sources}
-                                                        (:value (first children)))))
+       ;; (:> val1 val2 ...) is an output stream emit — transform to (do val1 val2 ...)
+       ;; so clj-kondo doesn't treat :> as a keyword function call.
+       (if (and (api/list-node? f)
+                (emit-node? (first (:children f))))
+           [(with-meta
+             (api/list-node (cons (api/token-node 'do) (rest (:children f))))
+             (meta f))
+            following]
+           (if-let [children (and (not (api/token-node? f))
+                                  (not (api/keyword-node? f))
+                                  (:children f))]
+                   (let [{:keys [prefix branches]} (split-form f children ramavars)]
+                        (if (seq branches)
+                            (let [bodies   (mapv #(transform-body % ramavars) branches)
+                                  ramavars (when (and (> (count branches) 1)
+                                                      (not (rama-contains?
+                                                            '#{<<sources}
+                                                            (:value (first children)))))
                           ;; Here we want to find any ramavars defined on every
                           ;; branch. The intersection of all the ramavars. Then
                           ;; we want to find each of those ramavars that's new,
                           ;; so that we can perform unification with them.
-                                             (set/difference
-                                              (reduce
-                                               set/intersection
-                                               (eliminate-unchecked-branches branches bodies))
-                                              ramavars))]
+                                                 (set/difference
+                                                  (reduce
+                                                   set/intersection
+                                                   (eliminate-unchecked-branches branches bodies))
+                                                  ramavars))]
 
                              (if (and (seq ramavars) ;; unified ramavars
                                       (seq following)) ;; skip if nothing follows
@@ -1027,36 +1036,56 @@
                       ;; Unified bindings at the top of the let to handle
                       ;; (default> :unify false) branches that have unified
                       ;; vars injected, preventing unresolved symbol errors
-                                          (mapcat
-                                           (fn [ramavar]
-                                               [(api/token-node ramavar)
-                                                (api/token-node 'nil)])
-                                           ramavars)
+                                              (mapcat
+                                               (fn [ramavar]
+                                                   [(api/token-node ramavar)
+                                                    (api/token-node 'nil)])
+                                               ramavars)
                       ;; The conditional, inserted as a binding to _ so
                       ;; unified vars get used (avoiding unused var warnings)
-                                          [(api/token-node '_)
-                                           (api/list-node
-                                            (into prefix
-                                                  (map #(inject-ramavars-map ramavars %)
-                                                       bodies)))])
-                                         follows)
-                                        {::ramavars ramavars})
-                                       nil])
-                                 [(with-meta
-                                   (api/list-node
-                                    (apply concat prefix bodies))
-                                   {::ramavars ramavars})
-                                  following]))
+                                              [(api/token-node '_)
+                                               (api/list-node
+                                                (into prefix
+                                                      (map #(inject-ramavars-map ramavars %)
+                                                           bodies)))])
+                                             follows)
+                                            {::ramavars ramavars})
+                                           nil])
+                                     [(with-meta
+                                       (api/list-node
+                                        (apply concat prefix bodies))
+                                       {::ramavars ramavars})
+                                      following]))
 
-                        (let [[expr out new-bindings rebinds new-vars found-anchors]
-                              (if (api/list-node? f)
-                                  (extract-emits children ramavars)
-                                  [f])]
-                             (if
-                              (or new-bindings rebinds (not-empty found-anchors))
-                              [(let [ramavars     (into ramavars new-vars)
-                                     follows      (transform-body following ramavars)
-                                     ramavars     (into ramavars (::ramavars (meta follows)))
+                            ;; For ifexpr, pre-transform branches so inner :> emits
+                            ;; are handled before extract-emits sees the outer :>.
+                            ;; (ifexpr test (op :> *x) val :> *out) becomes
+                            ;; (ifexpr test (trampoline (let [*x (op)] *x)) val :> *out)
+                            (let [children (if (and (api/list-node? f)
+                                                    (rama= 'ifexpr (:value (first children))))
+                                               (let [;; Find where the outer :> starts (if any)
+                                                     non-emit (take-while (complement emit-node?) (rest children))
+                                                     emit-tail (drop (count non-emit) (rest children))
+                                                     [test & branch-exprs] (seq non-emit)
+                                                     wrap (fn [expr]
+                                                              (let [body (transform-body [expr] ramavars)]
+                                                                   (api/list-node (list* (api/token-node 'trampoline) body))))]
+                                                    (into (into [(first children) test]
+                                                                (mapv wrap branch-exprs))
+                                                          emit-tail))
+                                               children)
+                                  f (if (not= children (:children f))
+                                        (with-meta (api/list-node children) (meta f))
+                                        f)
+                                  [expr out new-bindings rebinds new-vars found-anchors]
+                                  (if (api/list-node? f)
+                                      (extract-emits children ramavars)
+                                      [f])]
+                                 (if
+                                  (or new-bindings rebinds (not-empty found-anchors))
+                                  [(let [ramavars     (into ramavars new-vars)
+                                         follows      (transform-body following ramavars)
+                                         ramavars     (into ramavars (::ramavars (meta follows)))
                     ;; HACK: This insertion of a call to `trampoline` is
                     ;; actually important. For whatever reason, clojure-lsp
                     ;; doesn't provide the regular editor support for things
@@ -1065,89 +1094,89 @@
                     ;; fine, but the function name itself was missing this. As
                     ;; such, this call to `trampoline` is inserted to ensure
                     ;; that the editor is able to provide this functionality.
-                                     expr         (cons (api/token-node 'trampoline) expr)
+                                         expr         (cons (api/token-node 'trampoline) expr)
                                      ;; Destructuring output (single vector/map node)
                                      ;; must use the original node as the binding form,
                                      ;; even when all vars are rebinds.
-                                     destructuring? (and (= 1 (count out))
-                                                         (let [o (first out)]
-                                                              (or (api/vector-node? o)
-                                                                  (api/map-node? o))))
-                                     new-bindings (if (and rebinds (not destructuring?))
-                                                      (case (count new-bindings)
-                                                            0 []
-                                                            1 [(api/token-node (first new-bindings))
-                                                               (api/list-node expr)]
-                                                            [(api/vector-node
-                                                              (mapv api/token-node new-bindings))
-                                                             (api/list-node expr)])
-                                                      [(if (= 1 (count out))
-                                                           (first out)
-                                                           (api/vector-node out))
-                                                       (api/list-node expr)])
-                                     rebindings   (if destructuring?
-                                                      []
-                                                      (mapcat
-                                                       #(vector
-                                                         (api/token-node %)
-                                                         (api/list-node
-                                                          [(api/token-node 'identity) %]))
-                                                       rebinds))
-                                     anchor-binds (mapcat #(vector
-                                                            %
-                                                            (api/token-node nil))
-                                                          found-anchors)
-                                     bind-expr    (with-meta
-                                                   (let-node
-                                                    (concat anchor-binds
-                                                            new-bindings
-                                                            rebindings)
-                                                    follows)
-                                                   {::ramavars ramavars})
+                                         destructuring? (and (= 1 (count out))
+                                                             (let [o (first out)]
+                                                                  (or (api/vector-node? o)
+                                                                      (api/map-node? o))))
+                                         new-bindings (if (and rebinds (not destructuring?))
+                                                          (case (count new-bindings)
+                                                                0 []
+                                                                1 [(api/token-node (first new-bindings))
+                                                                   (api/list-node expr)]
+                                                                [(api/vector-node
+                                                                  (mapv api/token-node new-bindings))
+                                                                 (api/list-node expr)])
+                                                          [(if (= 1 (count out))
+                                                               (first out)
+                                                               (api/vector-node out))
+                                                           (api/list-node expr)])
+                                         rebindings   (if destructuring?
+                                                          []
+                                                          (mapcat
+                                                           #(vector
+                                                             (api/token-node %)
+                                                             (api/list-node
+                                                              [(api/token-node 'identity) %]))
+                                                           rebinds))
+                                         anchor-binds (mapcat #(vector
+                                                                %
+                                                                (api/token-node nil))
+                                                              found-anchors)
+                                         bind-expr    (with-meta
+                                                       (let-node
+                                                        (concat anchor-binds
+                                                                new-bindings
+                                                                rebindings)
+                                                        follows)
+                                                       {::ramavars ramavars})
                     ;; Produces
                     ;; (do
                     ;;   ...val
                     ;;   (let [...vars ...(str vars)]
                     ;;     ...follows))
-                                     result
-                                     (with-meta
-                                      (if (and rebinds (not destructuring?))
-                                          (api/list-node
-                                           (list
-                                            (api/token-node 'do)
-                                            (api/list-node expr)
-                                            bind-expr))
-                                          bind-expr)
-                                      {::ramavars ramavars})]
-                                    result)
-                               nil]
-                              (let [handled-form (handle-form f following ramavars)]
-                                   (if handled-form
-                                       handled-form
-                                       [(let [;; HACK: same as above, we insert a call to trampoline
+                                         result
+                                         (with-meta
+                                          (if (and rebinds (not destructuring?))
+                                              (api/list-node
+                                               (list
+                                                (api/token-node 'do)
+                                                (api/list-node expr)
+                                                bind-expr))
+                                              bind-expr)
+                                          {::ramavars ramavars})]
+                                        result)
+                                   nil]
+                                  (let [handled-form (handle-form f following ramavars)]
+                                       (if handled-form
+                                           handled-form
+                                           [(let [;; HACK: same as above, we insert a call to trampoline
                         ;; for other forms too. However, we need to make sure
                         ;; that we're NOT inserting it for `let` forms, because
                         ;; that would break bindings
-                                              children (if (and (api/list-node? f)
-                                                                (not (api/keyword-node? (first
-                                                                                         children)))
-                                                                (not (contains?
-                                                                      '#{let letfn}
-                                                                      (:value (first children)))))
-                                                           (cons (api/token-node 'trampoline) children)
-                                                           children)
-                                              body     (transform-body children ramavars)]
-                                             (vary-meta
-                                              (cond
-                                               (api/vector-node? f) (api/vector-node body)
-                                               (api/map-node? f) (api/map-node body)
-                                               (api/set-node? f) (api/set-node body)
-                                               :else (api/list-node body))
-                                              assoc
-                                              ::ramavars
-                                              (::ramavars (meta body))))
-                                        following]))))))
-               [f following])))
+                                                  children (if (and (api/list-node? f)
+                                                                    (not (api/keyword-node? (first
+                                                                                             children)))
+                                                                    (not (contains?
+                                                                          '#{let letfn}
+                                                                          (:value (first children)))))
+                                                               (cons (api/token-node 'trampoline) children)
+                                                               children)
+                                                  body     (transform-body children ramavars)]
+                                                 (vary-meta
+                                                  (cond
+                                                   (api/vector-node? f) (api/vector-node body)
+                                                   (api/map-node? f) (api/map-node body)
+                                                   (api/set-node? f) (api/set-node body)
+                                                   :else (api/list-node body))
+                                                  assoc
+                                                  ::ramavars
+                                                  (::ramavars (meta body))))
+                                            following]))))))
+                   [f following]))))
 
 (defn transform-form
       ([f following] (transform-form* f following #{}))
@@ -1564,7 +1593,8 @@
 ;;; defrecord+ support
 
 (defn- strip-schema-annotations
-       "Removes `:- Type` pairs from a field vector's children."
+       "Removes `:- Type` pairs from a field vector's children.
+  [a :- S b :- S] => [a b]"
        [children]
        (loop [cs     children
               result []]
@@ -1578,7 +1608,8 @@
 
 (defn defrecord+-hook
       "Transforms `defrecord+` into a standard `defrecord`.
-  Strips schema annotations (`:- Type` pairs) from the field vector."
+  Strips schema annotations (`:- Type` pairs) from the field vector.
+  (defrecord+ Foo [a :- Schema b :- Schema]) => (defrecord Foo [a b])"
       [{:keys [node]}]
       (let [[_ record-name fields & body] (:children node)
             plain-fields (strip-schema-annotations (:children fields))

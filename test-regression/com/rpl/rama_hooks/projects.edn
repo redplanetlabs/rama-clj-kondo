@@ -13,6 +13,13 @@
   :sha "844bb7a8a9b5162dad02f5a87c878bceb973dd8b"
   :paths ["src/clj" "test"]
   :findings-file "test-regression/com/rpl/rama_hooks/fixtures/rama_tpcc_findings.edn"}
+ {:name "agent-o-rama"
+  :repo "https://github.com/redplanetlabs/agent-o-rama.git"
+  :sha "b5768c37dde0f03c085b6021720447b26f820628"
+  :paths ["src/clj"]
+  ;; TODO: move these hooks to the agent-o-rama repo
+  :config-overlay "test-regression/com/rpl/rama_hooks/overlays/agent-o-rama"
+  :findings-file "test-regression/com/rpl/rama_hooks/fixtures/agent_o_rama_findings.edn"}
  {:name "curated"
   :local true
   :paths ["test-regression/com/rpl/rama_hooks/sources/curated"]

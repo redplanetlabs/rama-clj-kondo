@@ -68,21 +68,21 @@
                (rama/deframaop-hook
                 (sexpr->node form))))]
        (testing "deframaop without docstring"
-                (is (= '(defn f [] (:> nil)) (f '(deframaop f [] (:>))))))
+                (is (= '(defn f [] (do)) (f '(deframaop f [] (:>))))))
 
        (testing "deframaop with docstring"
-                (is (= '(defn f "A function" [] (:> nil))
+                (is (= '(defn f "A function" [] (do))
                        (f '(deframaop f "A function" [] (:>))))))
 
        (testing "deframafn without docstring"
-                (is (= '(defn f [*a] (:> nil)) (f '(deframafn f [*a] (:>))))))
+                (is (= '(defn f [*a] (do)) (f '(deframafn f [*a] (:>))))))
 
        (testing "deframafn with docstring"
-                (is (= '(defn f "Takes a value" [*a] (:> nil))
+                (is (= '(defn f "Takes a value" [*a] (do))
                        (f '(deframafn f "Takes a value" [*a] (:>))))))
 
        (testing "deframaop with multi-line docstring"
-                (is (= '(defn f "Line 1\nLine 2" [] (:> nil))
+                (is (= '(defn f "Line 1\nLine 2" [] (do))
                        (f '(deframaop f "Line 1\nLine 2" [] (:>))))))
 
        (with-testing-context
