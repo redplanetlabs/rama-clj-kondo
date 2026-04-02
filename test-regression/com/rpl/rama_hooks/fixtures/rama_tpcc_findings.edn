@@ -41,7 +41,7 @@
   :col 7,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: types/->NewOrderInvalidResult"}
  {:filename "src/clj/rpl/tpcc.clj",
   :row 400,
   :col 47,
@@ -59,19 +59,19 @@
   :col 7,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: types/->NewOrderResult"}
  {:filename "src/clj/rpl/tpcc.clj",
   :row 559,
   :col 5,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: types/->PaymentCustomerInfo"}
  {:filename "src/clj/rpl/tpcc.clj",
   :row 562,
   :col 5,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: types/->PaymentResult"}
  {:filename "src/clj/rpl/tpcc.clj",
   :row 635,
   :col 3,
@@ -98,7 +98,7 @@
   :col 6,
   :level :warning,
   :type :unresolved-var,
-  :message "Unresolved var: "}
+  :message "Unresolved var: types/->OrderStatusResult"}
  {:filename "src/clj/rpl/tpcc.clj",
   :row 667,
   :col 3,
