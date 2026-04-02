@@ -1,7 +1,0 @@
-{:hooks
- {:analyze-call
-  {com.rpl.rama.util.helpers/defrecord+
-   com.rpl.rama.util.helpers-hooks/defrecord+-hook
-
-   rpl.rama.util.helpers/defrecord+
-   com.rpl.rama.util.helpers-hooks/defrecord+-hook}}}

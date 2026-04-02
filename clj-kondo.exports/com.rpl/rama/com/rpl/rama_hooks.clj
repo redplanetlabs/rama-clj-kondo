@@ -1560,3 +1560,32 @@
                     (flatten)
                     (mapv validate-form)))
       orig)
+
+;;; defrecord+ support
+
+(defn- strip-schema-annotations
+       "Removes `:- Type` pairs from a field vector's children."
+       [children]
+       (loop [cs     children
+              result []]
+             (if (seq cs)
+                 (let [node (first cs)]
+                      (if (and (api/keyword-node? node)
+                               (= :- (api/sexpr node)))
+                          (recur (drop 2 cs) result)
+                          (recur (rest cs) (conj result node))))
+                 result)))
+
+(defn defrecord+-hook
+      "Transforms `defrecord+` into a standard `defrecord`.
+  Strips schema annotations (`:- Type` pairs) from the field vector."
+      [{:keys [node]}]
+      (let [[_ record-name fields & body] (:children node)
+            plain-fields (strip-schema-annotations (:children fields))
+            new-node (api/list-node
+                      (list*
+                       (api/token-node 'defrecord)
+                       record-name
+                       (api/vector-node plain-fields)
+                       body))]
+           {:node (with-meta new-node (meta node))}))

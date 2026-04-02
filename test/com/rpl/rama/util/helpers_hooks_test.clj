@@ -1,7 +1,7 @@
 (ns com.rpl.rama.util.helpers-hooks-test
     (:require
      [clojure.test :refer [deftest is testing]]
-     [com.rpl.rama.util.helpers-hooks :as hooks]
+     [com.rpl.rama-hooks :as hooks]
      [com.rpl.test-helpers :refer [node->sexpr sexpr->node]]))
 
 (deftest defrecord+-hook-test

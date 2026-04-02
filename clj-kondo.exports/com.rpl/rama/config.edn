@@ -32,7 +32,12 @@
    module                com.rpl.rama-hooks/module-hook
    ?<-                   com.rpl.rama-hooks/top-level-block-hook
    batch<-               com.rpl.rama-hooks/batch<--hook
-   foreign-select        com.rpl.rama-hooks/foreign-select-hook}}
+   foreign-select        com.rpl.rama-hooks/foreign-select-hook
+
+   com.rpl.rama.util.helpers/defrecord+
+   com.rpl.rama-hooks/defrecord+-hook
+   rpl.rama.util.helpers/defrecord+
+   com.rpl.rama-hooks/defrecord+-hook}}
 
  :lint-as
  {com.rpl.rama/defgenerator        clojure.core/defn
