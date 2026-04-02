@@ -1,6 +1,5 @@
 (ns com.rpl.rama-hooks.external-projects-test
     (:require
-     [clj-kondo.core :as clj-kondo]
      [clojure.edn :as edn]
      [clojure.java.io :as io]
      [clojure.java.shell :as shell]
@@ -56,21 +55,38 @@
        []
        (some? (System/getenv "CLJ_KONDO_REGRESSION_UPDATE")))
 
+(defn- run-kondo!
+       "Shell out to clj-kondo binary. Tolerates exit 2/3 (findings present)."
+       [& args]
+       (let [{:keys [exit out err]} (apply shell/sh args)]
+            (when (> exit 3)
+                  (throw (ex-info (str "clj-kondo failed: " err)
+                                  {:args args :exit exit :out out :err err})))
+            out))
+
 (defn- lint-project
-       [{:keys [paths] :as project}]
-       (let [project-dir (ensure-checkout! project)
-             config-dir (io/file project-dir ".clj-kondo")
-             _ (delete-tree! (io/file config-dir ".cache"))
-             _ (clj-kondo/run! {:config-dir (.getPath config-dir)
-                                :copy-configs true
-                                :skip-lint true
-                                :lint [(System/getProperty "java.class.path")]})
-             lint-paths (mapv #(str (io/file project-dir %)) paths)
-             findings (:findings (clj-kondo/run! {:config-dir (.getPath config-dir)
-                                                  :lint lint-paths
-                                                  :parallel true
-                                                  :repro true}))]
-            (->> findings
+       [{:keys [paths local] :as project}]
+       (let [project-dir (if local "." (ensure-checkout! project))
+             config-dir (.getPath (if local
+                                      (io/file "." ".clj-kondo")
+                                      (io/file project-dir ".clj-kondo")))
+             _ (when-not local
+                         (delete-tree! (io/file config-dir ".cache")))
+             _ (run-kondo! "clj-kondo"
+                           "--lint" (System/getProperty "java.class.path")
+                           "--copy-configs" "--skip-lint"
+                           "--config-dir" config-dir)
+             lint-paths (if local
+                            (mapv str paths)
+                            (mapv #(str (io/file project-dir %)) paths))
+             result (edn/read-string
+                     (run-kondo! "clj-kondo"
+                                 "--lint" (str/join ":" lint-paths)
+                                 "--config-dir" config-dir
+                                 "--config" "{:output {:format :edn}}"
+                                 "--parallel"
+                                 "--repro"))]
+            (->> (:findings result)
                  (map (fn [finding]
                           (-> (select-keys finding [:filename :row :col :level :type :message])
                               (update :filename #(relative-path project-dir %)))))

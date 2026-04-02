@@ -25,111 +25,93 @@
   :message
   "Unused value: \"Given sorted list of [first id] pairs, return the one at position ceil(n/2)-1.\""}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 340,
-  :col 39,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *w-tax"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 341,
-  :col 44,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *d-tax"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 400,
+  :row 397,
   :col 47,
   :level :warning,
   :type :unused-binding,
   :message "unused binding *o-id"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 443,
-  :col 12,
-  :level :warning,
-  :type :unused-binding,
-  :message "unused binding *final-total"}
- {:filename "src/clj/rpl/tpcc.clj",
-  :row 635,
+  :row 628,
   :col 3,
   :level :info,
   :type :rama-unverifiable-pobject,
   :message
   "Cannot verify that $$customer is declared in this module's scope"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 635,
+  :row 628,
   :col 3,
   :level :info,
   :type :rama-unverifiable-pobject,
   :message
   "Cannot verify that $$customer-by-last is declared in this module's scope"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 635,
+  :row 628,
   :col 3,
   :level :info,
   :type :rama-unverifiable-pobject,
   :message
   "Cannot verify that $$order is declared in this module's scope"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 667,
+  :row 660,
   :col 3,
   :level :info,
   :type :rama-unverifiable-pobject,
   :message
   "Cannot verify that $$district is declared in this module's scope"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 667,
+  :row 660,
   :col 3,
   :level :info,
   :type :rama-unverifiable-pobject,
   :message
   "Cannot verify that $$order is declared in this module's scope"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 667,
+  :row 660,
   :col 3,
   :level :info,
   :type :rama-unverifiable-pobject,
   :message
   "Cannot verify that $$stock is declared in this module's scope"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 689,
+  :row 682,
   :col 24,
   :level :error,
   :type :unresolved-symbol,
   :message "Unresolved symbol: *transaction-depot"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 692,
+  :row 685,
   :col 26,
   :level :error,
   :type :unresolved-symbol,
   :message "Unresolved symbol: *cleanup-tick"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 716,
+  :row 709,
   :col 5,
   :level :info,
   :type :rama-unverifiable-pobject,
   :message
   "Cannot verify that *cleanup-tick is declared in this module's scope"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 716,
+  :row 709,
   :col 5,
   :level :info,
   :type :rama-unverifiable-pobject,
   :message
   "Cannot verify that *transaction-depot is declared in this module's scope"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 716,
+  :row 709,
   :col 5,
   :level :warning,
   :type :unused-binding,
   :message "unused binding *cleanup-tick"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 716,
+  :row 709,
   :col 5,
   :level :warning,
   :type :unused-binding,
   :message "unused binding *transaction-depot"}
  {:filename "src/clj/rpl/tpcc.clj",
-  :row 721,
+  :row 714,
   :col 26,
   :level :warning,
   :type :unused-binding,

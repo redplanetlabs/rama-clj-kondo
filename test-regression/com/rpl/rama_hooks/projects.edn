@@ -10,6 +10,10 @@
   :findings-file "test-regression/com/rpl/rama_hooks/fixtures/rama_demo_gallery_findings.edn"}
  {:name "rama-tpcc"
   :repo "https://github.com/redplanetlabs/rama-tpcc.git"
-  :sha "be7e3f2ba4ae6106a8587664b410fd7e5af65e78"
+  :sha "844bb7a8a9b5162dad02f5a87c878bceb973dd8b"
   :paths ["src/clj" "test"]
-  :findings-file "test-regression/com/rpl/rama_hooks/fixtures/rama_tpcc_findings.edn"}]
+  :findings-file "test-regression/com/rpl/rama_hooks/fixtures/rama_tpcc_findings.edn"}
+ {:name "curated"
+  :local true
+  :paths ["test-regression/com/rpl/rama_hooks/sources/curated"]
+  :findings-file "test-regression/com/rpl/rama_hooks/fixtures/curated_findings.edn"}]
