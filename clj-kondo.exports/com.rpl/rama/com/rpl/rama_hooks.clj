@@ -1305,6 +1305,20 @@
                       out (wrap-known-pobjects out body unscoped)]
                      [(wrap-with-topology-ref topology out) following])
 
+                (= 'if (:value (first children)))
+                (let [[if-token cond-expr then-branch else-branch] children
+                      [then-r _] (transform-module-form then-branch [] pobjects scoped-pobjects)
+                      [else-r _] (when else-branch
+                                       (transform-module-form else-branch [] pobjects scoped-pobjects))
+                      branch-pobjects (set/union (::pobjects (meta then-r))
+                                                 (::pobjects (meta else-r)))]
+                     [(with-meta
+                       (api/list-node
+                        (cond-> [if-token cond-expr then-r]
+                          else-r (conj else-r)))
+                       {::pobjects (set/union pobjects branch-pobjects)})
+                      following])
+
                 :else
                 [(let [body (transform-module-body children pobjects
                                                    scoped-pobjects)]

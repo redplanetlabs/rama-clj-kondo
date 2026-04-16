@@ -161,6 +161,20 @@
                                          (source> *depot-2 :> *key)
                                          (+compound $$p {*key (+count)}))))))))))
 
+           (testing "if form in module body preserves both branches"
+                    (is (= '(defn TestModule [setup topologies]
+                                  (if COND
+                                    (let [*tick-depot (declare-depot setup)]
+                                         (pr *tick-depot))
+                                    (let [*tick-depot (declare-tick-depot setup 5000)]
+                                         (pr *tick-depot))))
+                           (node->sexpr
+                            (rama/defmodule-hook
+                             (sexpr->node '(defmodule TestModule [setup topologies]
+                                                      (if COND
+                                                        (declare-depot setup *tick-depot)
+                                                        (declare-tick-depot setup *tick-depot 5000)))))))))
+
            (with-testing-context
             "Errors if the module name or input vectors are missing, or don't have the correct type"
              (rama/defmodule-hook
