@@ -45,11 +45,12 @@
 (def syntax-error-keyword-fn-in-dataflow
      "Keywords cannot be used as functions in dataflow code. Use `get`.")
 (defn syntax-error-illegal-special-form [form]
-      (format "Cannot use %s in dataflow code.
-
-Clojure special forms or macros expanding to them cannot be used in
-Rama's dataflow code. Use Rama's primitives instead."
-              form))
+      (str (format "Cannot use `%s` in dataflow code.\n\nClojure special forms or macros expanding to them cannot be used in\nRama's dataflow code."
+                   form)
+           (case form
+             and " Use `and>` instead."
+             or  " Use `or>` instead."
+             "")))
 (def syntax-error-lambda-fn-in-foreign-select
      "Lambda functions cannot be used in foreign selects.
 The worker will be unable to deserialize the function.")

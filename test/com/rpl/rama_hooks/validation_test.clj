@@ -5,6 +5,7 @@
      [com.rpl.errors :as err]
      [com.rpl.rama-hooks :as rama]
      [com.rpl.test-helpers :refer [body->sexpr
+                                   get-first-error-message
                                    node->sexpr
                                    sexpr->node
                                    transform-sexprs
@@ -71,6 +72,21 @@
                                deref
                                first
                                :message)))))))
+
+(deftest and-or-are-illegal-in-dataflow-test
+  (with-testing-context
+   "Can't use and in dataflow code"
+   (binding [rama/*context* :dataflow]
+            (body->sexpr (transform-sexprs '(and *x *y)))
+            (is (= (err/syntax-error-illegal-special-form 'and)
+                   (get-first-error-message)))))
+
+  (with-testing-context
+   "Can't use or in dataflow code"
+   (binding [rama/*context* :dataflow]
+            (body->sexpr (transform-sexprs '(or *x *y)))
+            (is (= (err/syntax-error-illegal-special-form 'or)
+                   (get-first-error-message))))))
 
 (deftest java-method-calls-and-constructors-are-illegal-in-dataflow-test
   (with-testing-context
@@ -141,3 +157,63 @@
            (node->sexpr
             (rama/defmodule-hook
              (sexpr->node bank-transfer-module-with-error-code)))))))
+
+(deftest and-or-illegal-as-<<if-condition-in-defmodule-sources-test
+  (with-testing-context
+   "and is illegal as <<if condition inside <<sources in defmodule"
+    (rama/defmodule-hook
+     (sexpr->node
+      '(defmodule TestModule
+                  [setup topologies]
+                  (let [st (stream-topology topologies "test")]
+                       (<<sources
+                        st
+                        (source> *depot :> *v)
+                        (<<if (and *v true)
+                          (do-something *v)))))))
+    (is (= (err/syntax-error-illegal-special-form 'and)
+           (get-first-error-message))))
+
+  (with-testing-context
+   "or is illegal as <<if condition inside <<sources in defmodule"
+    (rama/defmodule-hook
+     (sexpr->node
+      '(defmodule TestModule
+                  [setup topologies]
+                  (let [st (stream-topology topologies "test")]
+                       (<<sources
+                        st
+                        (source> *depot :> *v)
+                        (<<if (or *v false)
+                          (do-something *v)))))))
+    (is (= (err/syntax-error-illegal-special-form 'or)
+           (get-first-error-message)))))
+
+(deftest and-or-illegal-in-defmodule-sources-test
+  (with-testing-context
+   "and is illegal in <<sources block inside defmodule"
+    (rama/defmodule-hook
+     (sexpr->node
+      '(defmodule TestModule
+                  [setup topologies]
+                  (let [st (stream-topology topologies "test")]
+                       (<<sources
+                        st
+                        (source> *depot :> *v)
+                        (and *v true :> *result))))))
+    (is (= (err/syntax-error-illegal-special-form 'and)
+           (get-first-error-message))))
+
+  (with-testing-context
+   "or is illegal in <<sources block inside defmodule"
+    (rama/defmodule-hook
+     (sexpr->node
+      '(defmodule TestModule
+                  [setup topologies]
+                  (let [st (stream-topology topologies "test")]
+                       (<<sources
+                        st
+                        (source> *depot :> *v)
+                        (or *v false :> *result))))))
+    (is (= (err/syntax-error-illegal-special-form 'or)
+           (get-first-error-message)))))

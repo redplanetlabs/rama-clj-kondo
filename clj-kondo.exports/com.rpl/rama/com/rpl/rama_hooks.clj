@@ -1012,7 +1012,10 @@
                                   (:children f))]
                    (let [{:keys [prefix branches]} (split-form f children ramavars)]
                         (if (seq branches)
-                            (let [bodies   (mapv #(transform-body % ramavars) branches)
+                            (let [_ (doseq [p prefix]
+                                           (when (api/list-node? p)
+                                                 (validate-form (first (:children p)))))
+                                  bodies   (mapv #(transform-body % ramavars) branches)
                                   ramavars (when (and (> (count branches) 1)
                                                       (not (rama-contains?
                                                             '#{<<sources}
