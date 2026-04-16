@@ -76,17 +76,17 @@
 (deftest and-or-are-illegal-in-dataflow-test
   (with-testing-context
    "Can't use and in dataflow code"
-   (binding [rama/*context* :dataflow]
-            (body->sexpr (transform-sexprs '(and *x *y)))
-            (is (= (err/syntax-error-illegal-special-form 'and)
-                   (get-first-error-message)))))
+    (binding [rama/*context* :dataflow]
+             (body->sexpr (transform-sexprs '(and *x *y)))
+             (is (= (err/syntax-error-illegal-special-form 'and)
+                    (get-first-error-message)))))
 
   (with-testing-context
    "Can't use or in dataflow code"
-   (binding [rama/*context* :dataflow]
-            (body->sexpr (transform-sexprs '(or *x *y)))
-            (is (= (err/syntax-error-illegal-special-form 'or)
-                   (get-first-error-message))))))
+    (binding [rama/*context* :dataflow]
+             (body->sexpr (transform-sexprs '(or *x *y)))
+             (is (= (err/syntax-error-illegal-special-form 'or)
+                    (get-first-error-message))))))
 
 (deftest java-method-calls-and-constructors-are-illegal-in-dataflow-test
   (with-testing-context
@@ -170,7 +170,7 @@
                         st
                         (source> *depot :> *v)
                         (<<if (and *v true)
-                          (do-something *v)))))))
+                              (do-something *v)))))))
     (is (= (err/syntax-error-illegal-special-form 'and)
            (get-first-error-message))))
 
@@ -185,7 +185,7 @@
                         st
                         (source> *depot :> *v)
                         (<<if (or *v false)
-                          (do-something *v)))))))
+                              (do-something *v)))))))
     (is (= (err/syntax-error-illegal-special-form 'or)
            (get-first-error-message)))))
 
