@@ -1,4 +1,4 @@
-Since Rama defines it's own dataflow language as a DSL in Clojure, linting it 
+Since Rama defines its own dataflow language as a DSL in Clojure, linting it 
 is a difficult problem. This repo defines the rules for how Rama code should be 
 re-written such that clj-kondo can provide helpful warnings and errors as 
 effectively as possible.
