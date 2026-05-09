@@ -2834,12 +2834,6 @@
   :message "unused binding evals-pstate-sym"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/queries.clj",
   :row 925,
-  :col 10,
-  :level :error,
-  :type :unresolved-symbol,
-  :message "Unresolved symbol: sorted-map-range-to-end"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/queries.clj",
-  :row 925,
   :col 44,
   :level :warning,
   :type :unused-binding,
@@ -3448,12 +3442,6 @@
   :level :warning,
   :type :unresolved-var,
   :message "Unresolved var: aor-types/MAX-TRACES-PER-TASK-CONFIG"}
- {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
-  :row 1210,
-  :col 24,
-  :level :error,
-  :type :unresolved-symbol,
-  :message "Unresolved symbol: sorted-map-range-from-start"}
  {:filename "src/clj/com/rpl/agent_o_rama/impl/topology.clj",
   :row 1250,
   :col 6,
@@ -4793,13 +4781,6 @@
   :level :warning,
   :type :unused-binding,
   :message "unused binding uid"}
- {:filename
-  "src/clj/com/rpl/agent_o_rama/impl/ui/handlers/invocations.clj",
-  :row 77,
-  :col 36,
-  :level :error,
-  :type :unresolved-symbol,
-  :message "Unresolved symbol: sorted-set-range-to-end"}
  {:filename
   "src/clj/com/rpl/agent_o_rama/impl/ui/handlers/invocations.clj",
   :row 149,
