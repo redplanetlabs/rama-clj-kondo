@@ -108,9 +108,9 @@
              NONE? not-selected? nthpath parser path pred pred< pred<= pred=
              pred> pred>= providepath putval recursive-path select select-any
              select-first select-one select-one! selected-any? selected?
-             set-elem setval sorted-map-range sorted-map-range-from
-             sorted-map-range-to sorted-set-range sorted-set-range-from
+             set-elem setval sorted-map-range sorted-map-range-from sorted-map-range-from-start
+             sorted-map-range-to sorted-map-range-to-end sorted-set-range sorted-set-range-from
              sorted-set-range-from-start
-             sorted-set-range-to srange srange-dynamic submap subselect subset
+             sorted-set-range-to sorted-set-range-to-end srange srange-dynamic submap subselect subset
              STAY STOP term termval transform transformed traverse traverse-all
              VAL view with-fresh-collected]}}}
